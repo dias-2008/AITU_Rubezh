@@ -1,0 +1,7 @@
+.sessions/
+config.json
+state.json
+.env
+__pycache__/
+secrets.json
+watch.log

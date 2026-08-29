@@ -1,0 +1,118 @@
+"""Сборка и раздача дашборда.
+
+Дашборд — один самодостаточный HTML-файл: данные вшиваются в него при сборке,
+дальше он работает без сервера. Открывается двойным кликом с диска.
+
+Почему так, а не веб-приложение: студент ничего не хостит. Файл лежит у него на
+компьютере, как и сессии. Команда `serve` нужна только чтобы открыть дашборд с
+телефона по локальной сети — она поднимает обычный http.server, без зависимостей.
+
+    python rubezh.py build     собрать build/dashboard.html
+    python rubezh.py serve     то же самое плюс раздача на 0.0.0.0:8000
+"""
+import json
+import socket
+from datetime import datetime
+from functools import partial
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+
+import grade
+
+ROOT = Path(__file__).parent
+TEMPLATE = ROOT / "templates" / "dashboard.html"
+BUILD = ROOT / "build"
+PLACEHOLDER = "__RUBEZH_DATA__"
+
+
+def payload(demo=True):
+    """Данные для дашборда. Пока только демо — живые появятся после 07.09."""
+    import demo as demo_data
+
+    courses = []
+    for course in demo_data.courses():
+        result = grade.evaluate(course)
+        result.pop("course", None)          # сам курс уже рядом, незачем дублировать
+        courses.append({
+            "code": course["code"], "title": course["title"],
+            "credits": course["credits"], "teacher": course["teacher"],
+            "items": course["items"], "eval": result,
+        })
+
+    return {
+        "demo": demo,
+        "student": demo_data.STUDENT,
+        "group": demo_data.GROUP,
+        "term": demo_data.TERM,
+        "today": demo_data.TODAY,
+        "updated": datetime.now().strftime("%d.%m.%Y %H:%M"),
+        "courses": courses,
+        "key_dates": demo_data.KEY_DATES,
+        "schedule": demo_data.SCHEDULE,
+    }
+
+
+def fragment(data=None):
+    """Дашборд без обвязки <html>: title, стили, разметка, скрипт."""
+    data = payload() if data is None else data
+    body = TEMPLATE.read_text(encoding="utf-8")
+    if PLACEHOLDER not in body:
+        raise SystemExit(f"В шаблоне нет {PLACEHOLDER} — некуда вставить данные.")
+    # </script> внутри строки JSON закрыл бы наш же тег раньше времени.
+    blob = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
+    return body.replace(PLACEHOLDER, blob)
+
+
+DOCTYPE = """<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+"""
+
+
+def build():
+    """Готовый файл, который открывается с диска без всякого сервера.
+
+    Шаблон — фрагмент без <html>: сначала title и стили, потом разметка.
+    Режем его по первому <div class="shell"> — всё до него уезжает в <head>.
+    """
+    BUILD.mkdir(exist_ok=True)
+    out = BUILD / "dashboard.html"
+    marker = '<div class="shell">'
+    head, found, rest = fragment().partition(marker)
+    if not found:
+        raise SystemExit(f"В шаблоне нет {marker} — не понять, где кончается head.")
+    out.write_text(
+        DOCTYPE + head + "</head>\n<body>\n" + marker + rest + "\n</body>\n</html>\n",
+        encoding="utf-8",
+    )
+    return out
+
+
+def _lan_ip():
+    """Адрес, по которому дашборд откроется с телефона в той же сети."""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        sock.connect(("8.8.8.8", 80))       # никуда не шлём, нужен только выбранный интерфейс
+        return sock.getsockname()[0]
+    except OSError:
+        return "127.0.0.1"
+    finally:
+        sock.close()
+
+
+def serve(port=8000):
+    out = build()
+    handler = partial(SimpleHTTPRequestHandler, directory=str(out.parent))
+    server = ThreadingHTTPServer(("0.0.0.0", port), handler)
+    print(f"Дашборд собран: {out}")
+    print(f"  на этом компьютере : http://localhost:{port}/dashboard.html")
+    print(f"  с телефона в той же сети: http://{_lan_ip()}:{port}/dashboard.html")
+    print("\nCtrl+C — остановить.")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nОстановлено.")
+    finally:
+        server.server_close()

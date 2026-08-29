@@ -1,0 +1,7 @@
+.env
+config.json
+state.json
+*.session
+*.session-journal
+__pycache__/
+digest.log

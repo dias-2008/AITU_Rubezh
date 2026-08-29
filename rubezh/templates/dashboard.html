@@ -1,0 +1,603 @@
+<title>AITU Rubezh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* ── Токены ───────────────────────────────────────────────────────────────
+   Светлая тема — базовая. Тёмная переопределяет ТОЛЬКО значения токенов,
+   и делает это дважды: под prefers-color-scheme (для тех, у кого тема
+   «системная» и на корне не стоит ничего) и под [data-theme="dark"].
+   Ни один цвет не объявляется только внутри медиазапроса.                  */
+:root {
+  --bg:#F6F7F9; --surface:#FFFFFF; --surface-2:#F0F2F5; --surface-3:#E8ECF1;
+  --border:#E2E6EC; --border-strong:#CFD6DE;
+  --ink:#141A20; --ink-2:#59656F; --ink-3:#8A95A1;
+  --accent:#0E7C86; --accent-ink:#0A5C64; --accent-soft:#DFF0F1;
+  --good:#2E7A55; --good-soft:#E0F0E7;
+  --warn:#8F6210; --warn-soft:#F7EBD6;
+  --bad:#A5342A; --bad-soft:#F8E3E0;
+  --shadow:0 1px 2px rgba(20,26,32,.05), 0 1px 3px rgba(20,26,32,.04);
+  --r:10px;
+  --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --sans:"Golos Text",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0E1215; --surface:#161B21; --surface-2:#1B222A; --surface-3:#222B34;
+    --border:#28313A; --border-strong:#3A4550;
+    --ink:#E7EDF3; --ink-2:#9BA7B3; --ink-3:#6C7784;
+    --accent:#3FB2BC; --accent-ink:#7FD3DA; --accent-soft:#123037;
+    --good:#5BB183; --good-soft:#152C22;
+    --warn:#D69B45; --warn-soft:#302516;
+    --bad:#E07A6B; --bad-soft:#33201D;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0E1215; --surface:#161B21; --surface-2:#1B222A; --surface-3:#222B34;
+  --border:#28313A; --border-strong:#3A4550;
+  --ink:#E7EDF3; --ink-2:#9BA7B3; --ink-3:#6C7784;
+  --accent:#3FB2BC; --accent-ink:#7FD3DA; --accent-soft:#123037;
+  --good:#5BB183; --good-soft:#152C22;
+  --warn:#D69B45; --warn-soft:#302516;
+  --bad:#E07A6B; --bad-soft:#33201D;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.3);
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+     font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;text-wrap:balance;font-weight:600;letter-spacing:-.01em}
+a{color:inherit}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.09em;
+         text-transform:uppercase;color:var(--ink-3)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+/* ── Каркас ─────────────────────────────────────────────────────────────── */
+.shell{display:grid;grid-template-columns:212px minmax(0,1fr);min-height:100vh}
+.side{border-right:1px solid var(--border);background:var(--surface);
+      padding:18px 12px;display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:9px;padding:0 8px}
+.mark{width:26px;height:26px;border-radius:7px;background:var(--accent);flex:none;
+      display:grid;place-items:center;color:#fff;font-family:var(--mono);font-weight:600;font-size:13px}
+.brand b{font-size:14.5px;font-weight:600;letter-spacing:-.02em}
+.brand span{display:block;font-size:10.5px;color:var(--ink-3);font-weight:400;letter-spacing:0}
+.nav{display:flex;flex-direction:column;gap:1px}
+.nav a{display:flex;align-items:center;gap:10px;padding:8px 9px;border-radius:8px;
+       color:var(--ink-2);text-decoration:none;font-size:13.5px;font-weight:500}
+.nav a:hover{background:var(--surface-2);color:var(--ink)}
+.nav a.on{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.nav svg{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7}
+.side-foot{margin-top:auto;padding:10px 9px;border-top:1px solid var(--border);
+           font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tbtn{background:none;border:1px solid var(--border);color:var(--ink-2);border-radius:6px;
+      padding:3px 8px;font:inherit;font-size:11px;cursor:pointer}
+.tbtn:hover{border-color:var(--border-strong);color:var(--ink)}
+
+.main{padding:20px 24px 56px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.head h1{font-size:22px}
+.head p{margin:3px 0 0;color:var(--ink-2);font-size:13px}
+
+/* ── Плитки-показатели ──────────────────────────────────────────────────── */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+      padding:11px 13px;box-shadow:var(--shadow)}
+.tile .v{font-family:var(--mono);font-size:21px;font-weight:600;letter-spacing:-.02em;
+         margin-top:5px;display:flex;align-items:baseline;gap:4px}
+.tile .v small{font-size:12px;font-weight:400;color:var(--ink-3)}
+.tile .sub{font-size:11.5px;color:var(--ink-3);margin-top:2px}
+
+/* ── Карточки ───────────────────────────────────────────────────────────── */
+.cards{display:grid;grid-template-columns:1.05fr .95fr 1.2fr;gap:12px;align-items:start}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+      box-shadow:var(--shadow);overflow:hidden}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:8px;
+        padding:11px 14px;border-bottom:1px solid var(--border)}
+.card-h h2{font-size:13px}
+.card-b{padding:12px 14px}
+
+.dates{display:flex;flex-direction:column}
+.date-row{display:flex;gap:11px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--border)}
+.date-row:last-child{border-bottom:0}
+.date-row .d{font-family:var(--mono);font-size:11px;color:var(--ink-3);width:52px;flex:none}
+.date-row .t{flex:1;font-size:13px;min-width:0}
+.date-row .n{font-family:var(--mono);font-size:11px;color:var(--ink-3);white-space:nowrap}
+
+/* Месяц: плотность дедлайнов одним тоном акцента, светлее → темнее */
+.mon{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.mon .dow{font-family:var(--mono);font-size:9.5px;color:var(--ink-3);text-align:center;padding-bottom:3px}
+.mon .cell{aspect-ratio:1;border-radius:5px;display:grid;place-items:center;
+           font-family:var(--mono);font-size:11px;color:var(--ink-2);background:var(--surface-2)}
+.mon .cell.out{background:transparent;color:var(--ink-3);opacity:.45}
+.mon .cell.l1{background:color-mix(in oklab,var(--accent) 18%,var(--surface-2));color:var(--ink)}
+.mon .cell.l2{background:color-mix(in oklab,var(--accent) 42%,var(--surface-2));color:var(--ink)}
+.mon .cell.l3{background:var(--accent);color:#fff;font-weight:600}
+.mon .cell.today{outline:2px solid var(--ink);outline-offset:-2px;font-weight:600}
+.legend{display:flex;align-items:center;gap:7px;margin-top:9px;font-size:10.5px;color:var(--ink-3)}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+/* ── Барьеры: главный элемент интерфейса ────────────────────────────────── */
+.gates{display:flex;flex-direction:column;gap:11px}
+.gate{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
+.gate .lbl{font-size:12.5px;color:var(--ink-2)}
+.gate .val{font-family:var(--mono);font-size:12.5px;font-weight:600}
+.meter{grid-column:1/-1;position:relative;height:7px;border-radius:4px;background:var(--surface-3);margin-top:3px}
+.meter i{position:absolute;inset:0 auto 0 0;border-radius:4px;background:var(--accent)}
+.meter i.ok{background:var(--good)} .meter i.warn{background:var(--warn)} .meter i.bad{background:var(--bad)}
+/* Засечка — это и есть «рубеж»: линия, которую надо перейти */
+.meter b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);
+         border-radius:1px;opacity:.75}
+.meter b::after{content:attr(data-t);position:absolute;top:-15px;left:50%;transform:translateX(-50%);
+                font-family:var(--mono);font-size:9px;color:var(--ink-3);font-weight:500}
+
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:20px;
+      font-size:11px;font-weight:600;white-space:nowrap;font-family:var(--mono)}
+.pill.ok{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.mute{background:var(--surface-3);color:var(--ink-2)}
+.pill.acc{background:var(--accent-soft);color:var(--accent-ink)}
+
+/* ── Задания + расписание ───────────────────────────────────────────────── */
+.split{display:grid;grid-template-columns:minmax(0,1fr) 296px;gap:12px;align-items:start}
+.tabs{display:flex;gap:2px;flex-wrap:wrap}
+.tab{background:none;border:0;padding:4px 9px;border-radius:7px;font:inherit;font-size:12px;
+     color:var(--ink-2);cursor:pointer}
+.tab:hover{background:var(--surface-2);color:var(--ink)}
+.tab.on{background:var(--surface-3);color:var(--ink);font-weight:600}
+.tab .c{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);margin-left:3px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-family:var(--mono);font-size:9.5px;font-weight:500;letter-spacing:.08em;
+   text-transform:uppercase;color:var(--ink-3);padding:7px 14px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:9px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--surface-2)}
+.t-title{font-weight:500}
+.t-sub{font-size:11.5px;color:var(--ink-3)}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--accent);flex:none}
+.crs{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11.5px;color:var(--ink-2);white-space:nowrap}
+.empty{padding:26px 14px;text-align:center;color:var(--ink-3);font-size:13px}
+
+.day{display:flex;flex-direction:column;gap:0}
+.slot{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:8px 0;border-bottom:1px dashed var(--border)}
+.slot:last-child{border-bottom:0}
+.slot .tm{font-family:var(--mono);font-size:11px;color:var(--ink-3);padding-top:1px}
+.slot .bd{border-left:2px solid var(--accent);padding-left:9px;min-width:0}
+.slot .bd .n{font-size:13px;font-weight:500}
+.slot .bd .m{font-size:11.5px;color:var(--ink-3);font-family:var(--mono)}
+.gap{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);padding:4px 0 4px 54px;
+     border-bottom:1px dashed var(--border)}
+
+/* ── Курсы ──────────────────────────────────────────────────────────────── */
+.courses{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+.cr-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;
+      padding:12px 14px;border-bottom:1px solid var(--border)}
+.cr-h .code{font-family:var(--mono);font-size:10.5px;color:var(--ink-3)}
+.cr-h h3{font-size:14px;margin-top:1px}
+.cr-h .who{font-size:11.5px;color:var(--ink-3);margin-top:2px}
+.cr-h .g{text-align:right;flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.cr-h .g .gp{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);white-space:nowrap}
+.rk{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding:12px 14px;
+    border-bottom:1px solid var(--border)}
+.rk div{min-width:0}
+.rk .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+/* В трёх узких колонках подпись засечки садится прямо на строку с баллом.
+   Полоса и так показывает, перешёл рубеж или нет — цифра тут лишняя. */
+.rk .meter b::after{content:none}
+.rk .s{font-family:var(--mono);font-size:16px;font-weight:600;margin-top:1px}
+.rk .s small{font-size:11px;color:var(--ink-3);font-weight:400}
+.need{display:flex;align-items:flex-start;gap:8px;padding:10px 14px;background:var(--surface-2);
+      border-bottom:1px solid var(--border);font-size:12.5px;color:var(--ink-2)}
+.need b{color:var(--ink);font-family:var(--mono)}
+.risks{padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.risk{display:flex;gap:7px;align-items:flex-start;font-size:12.5px;color:var(--ink-2)}
+.risk svg{width:14px;height:14px;flex:none;margin-top:2px;stroke:var(--bad);fill:none;stroke-width:1.8}
+
+.note{font-size:12px;color:var(--ink-3);text-align:center;padding:4px 0 0}
+.demo{display:flex;align-items:center;gap:8px;padding:8px 13px;border-radius:var(--r);
+      background:var(--warn-soft);color:var(--warn);font-size:12.5px;font-weight:500}
+
+/* ── Телефон ────────────────────────────────────────────────────────────── */
+@media (max-width:1080px){ .cards{grid-template-columns:1fr 1fr} .cards .card:last-child{grid-column:1/-1}
+  .split{grid-template-columns:1fr} .tiles{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:760px){
+  .shell{grid-template-columns:1fr}
+  .side{position:sticky;top:0;height:auto;flex-direction:row;align-items:center;gap:12px;
+        border-right:0;border-bottom:1px solid var(--border);padding:9px 13px;z-index:20}
+  .nav{flex-direction:row;overflow-x:auto;gap:2px;margin-left:auto}
+  .nav a span{display:none}
+  .nav a{padding:8px}
+  .side-foot{display:none}
+  .brand span{display:none}
+  .main{padding:14px 13px 40px;gap:13px}
+  .cards{grid-template-columns:1fr} .cards .card:last-child{grid-column:auto}
+  .head h1{font-size:19px}
+  th:nth-child(4),td:nth-child(4){display:none}
+  .courses{grid-template-columns:1fr}
+}
+</style>
+
+<div class="shell">
+  <aside class="side">
+    <div class="brand">
+      <div class="mark">Р</div>
+      <div><b>AITU Rubezh</b><span id="brandSub"></span></div>
+    </div>
+    <nav class="nav">
+      <a href="#top" class="on"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21H3z"/></svg><span>Главная</span></a>
+      <a href="#tasks"><svg viewBox="0 0 24 24"><path d="M9 5h11M9 12h11M9 19h11M4 5l1 1 2-2M4 12l1 1 2-2M4 19l1 1 2-2"/></svg><span>Задания</span></a>
+      <a href="#grades"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V4M16 19v-7M22 19H2"/></svg><span>Оценки</span></a>
+      <a href="#dates"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/></svg><span>Даты</span></a>
+    </nav>
+    <div class="side-foot"><span id="srcNote">данные</span>
+      <button class="tbtn" id="themeBtn" type="button">Тема</button></div>
+  </aside>
+
+  <main class="main" id="top">
+    <div id="demoBanner"></div>
+
+    <header class="head">
+      <div>
+        <h1 id="hello"></h1>
+        <p id="context"></p>
+      </div>
+      <div class="eyebrow" id="todayLbl"></div>
+    </header>
+
+    <section class="tiles" id="tiles"></section>
+
+    <section class="cards">
+      <div class="card" id="dates">
+        <div class="card-h"><h2>Ключевые даты</h2><span class="eyebrow">триместр</span></div>
+        <div class="card-b"><div class="dates" id="keyDates"></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Нагрузка</h2><span class="eyebrow" id="monLbl"></span></div>
+        <div class="card-b">
+          <div class="mon" id="month"></div>
+          <div class="legend">
+            <span>дедлайнов:</span>
+            <i style="background:var(--surface-2)"></i><span>0</span>
+            <i style="background:color-mix(in oklab,var(--accent) 18%,var(--surface-2))"></i><span>1</span>
+            <i style="background:color-mix(in oklab,var(--accent) 42%,var(--surface-2))"></i><span>2</span>
+            <i style="background:var(--accent)"></i><span>3+</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Допуск к экзаменам</h2><span class="eyebrow">рубежи</span></div>
+        <div class="card-b"><div class="gates" id="gates"></div></div>
+      </div>
+    </section>
+
+    <section class="split">
+      <div class="card" id="tasks">
+        <div class="card-h"><h2>Задания</h2><div class="tabs" id="tabs"></div></div>
+        <div class="tw"><table>
+          <thead><tr><th>Статус</th><th>Срок</th><th>Задание</th><th>Курс</th><th>Балл</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Расписание</h2><span class="eyebrow" id="dayLbl"></span></div>
+        <div class="card-b"><div class="day" id="day"></div></div>
+      </div>
+    </section>
+
+    <section id="grades">
+      <div class="head" style="margin-bottom:10px">
+        <div><h2 style="font-size:15px">Курсы</h2>
+        <p style="margin:2px 0 0;color:var(--ink-2);font-size:12.5px">
+          Итог = 0,3 × РК1 + 0,3 × РК2 + 0,4 × экзамен. Засечка на шкале — рубеж, который надо перейти.</p></div>
+      </div>
+      <div class="courses" id="courses"></div>
+    </section>
+
+    <p class="note" id="foot"></p>
+  </main>
+</div>
+
+<script>
+const DATA = __RUBEZH_DATA__;
+
+const MONTHS = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+const DOW = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
+const today = new Date(DATA.today + "T00:00:00");
+
+const el = (t, c, x) => { const n = document.createElement(t); if (c) n.className = c;
+  if (x !== undefined) n.textContent = x; return n; };
+const days = (a, b) => Math.round((new Date(a + "T00:00:00") - b) / 864e5);
+const fmt = d => { const x = new Date(d + "T00:00:00"); return x.getDate() + " " + MONTHS[x.getMonth()]; };
+
+/* Сколько дней осталось — словами, потому что «через 0 дней» никто не говорит */
+function whenText(n) {
+  if (n < 0) return { t: "просрочено", k: "bad" };
+  if (n === 0) return { t: "сегодня", k: "bad" };
+  if (n === 1) return { t: "завтра", k: "warn" };
+  if (n <= 7) return { t: "через " + n + " дн.", k: "warn" };
+  return { t: "через " + n + " дн.", k: "mute" };
+}
+
+/* ── Шапка ─────────────────────────────────────────────────────────────── */
+document.getElementById("brandSub").textContent = DATA.group;
+document.getElementById("hello").textContent = "Привет, " + DATA.student;
+document.getElementById("context").textContent =
+  DATA.term + " · группа " + DATA.group + " · " + DATA.courses.length + " дисциплин";
+document.getElementById("todayLbl").textContent =
+  DOW[(today.getDay() + 6) % 7] + ", " + fmt(DATA.today);
+document.getElementById("srcNote").textContent = DATA.demo ? "демо-данные" : "живые данные";
+document.getElementById("foot").textContent = DATA.demo
+  ? "Баллы вымышленные. Даты, формула и пороги — настоящие, из академического календаря AITU и силлабуса."
+  : "Данные из Moodle и портала AITU. Обновлено: " + DATA.updated;
+
+if (DATA.demo) {
+  const b = el("div", "demo");
+  b.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8">' +
+    '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>' +
+    '<span>Демо-режим: баллы придуманы, чтобы показать работу. Настоящие появятся после 07.09.</span>';
+  document.getElementById("demoBanner").appendChild(b);
+}
+
+/* ── Плитки ────────────────────────────────────────────────────────────── */
+const allItems = [];
+DATA.courses.forEach(c => c.items.forEach(i =>
+  allItems.push(Object.assign({}, i, { code: c.code, course: c.title }))));
+const graded = allItems.filter(i => i.score !== null);
+const pending = allItems.filter(i => i.score === null);
+const late = pending.filter(i => days(i.due, today) < 0);
+const week = pending.filter(i => { const n = days(i.due, today); return n >= 0 && n <= 7; });
+const avg = DATA.courses.length
+  ? DATA.courses.reduce((s, c) => s + c.eval.average_rk, 0) / DATA.courses.length : 0;
+const nextRk = DATA.key_dates.find(d => d.kind === "rk" && days(d.date, today) >= 0);
+const atRisk = DATA.courses.filter(c => c.eval.risks.length);
+
+function tile(label, value, unit, sub, cls) {
+  const n = el("div", "tile");
+  n.appendChild(el("div", "eyebrow", label));
+  const v = el("div", "v" + (cls ? " " + cls : ""));
+  v.appendChild(document.createTextNode(value));
+  if (unit) v.appendChild(el("small", null, unit));
+  n.appendChild(v);
+  n.appendChild(el("div", "sub", sub));
+  return n;
+}
+const tiles = document.getElementById("tiles");
+tiles.appendChild(tile("Сдано", graded.length + " / " + allItems.length, "",
+  pending.length + " впереди"));
+tiles.appendChild(tile("Среднее по РК", avg.toFixed(1), "из 100",
+  avg >= 50 ? "выше рубежа допуска" : "ниже рубежа 50"));
+tiles.appendChild(tile("Ближайший рубеж", nextRk ? nextRk.span : "—", "",
+  nextRk ? "через " + days(nextRk.date, today) + " дн." : "все пройдены"));
+tiles.appendChild(tile("Под угрозой", String(atRisk.length), "из " + DATA.courses.length,
+  atRisk.length ? atRisk.map(c => c.code.split(" ")[0]).join(", ") : "рисков нет"));
+
+/* ── Ключевые даты ─────────────────────────────────────────────────────── */
+const kd = document.getElementById("keyDates");
+DATA.key_dates.forEach(d => {
+  const n = days(d.date, today);
+  const row = el("div", "date-row");
+  row.appendChild(el("div", "d", d.span));
+  row.appendChild(el("div", "t", d.title));
+  const w = whenText(n);
+  const p = el("span", "pill " + (n < 0 ? "mute" : w.k === "mute" ? "mute" : w.k), n < 0 ? "прошло" : w.t);
+  row.appendChild(p);
+  kd.appendChild(row);
+});
+
+/* ── Месяц ─────────────────────────────────────────────────────────────── */
+const perDay = {};
+pending.concat(graded).forEach(i => { perDay[i.due] = (perDay[i.due] || 0) + 1; });
+const mv = new Date(today.getFullYear(), today.getMonth(), 1);
+document.getElementById("monLbl").textContent = MONTHS[mv.getMonth()] + " " + mv.getFullYear();
+const mon = document.getElementById("month");
+DOW.forEach(d => mon.appendChild(el("div", "dow", d)));
+const lead = (mv.getDay() + 6) % 7;
+const len = new Date(mv.getFullYear(), mv.getMonth() + 1, 0).getDate();
+for (let i = 0; i < lead; i++) mon.appendChild(el("div", "cell out", ""));
+for (let d = 1; d <= len; d++) {
+  const iso = mv.getFullYear() + "-" + String(mv.getMonth() + 1).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+  const c = perDay[iso] || 0;
+  const cell = el("div", "cell" + (c >= 3 ? " l3" : c === 2 ? " l2" : c === 1 ? " l1" : "") +
+    (iso === DATA.today ? " today" : ""), String(d));
+  cell.title = c ? c + " дедлайн(ов) " + fmt(iso) : fmt(iso);
+  mon.appendChild(cell);
+}
+
+/* ── Барьеры ───────────────────────────────────────────────────────────── */
+/* Один и тот же светофор для полосы и для числа рядом — иначе получается,
+   что цифра красная, а полоса жёлтая, и непонятно, чему верить. */
+function level(value, threshold) {
+  if (value >= threshold) return "ok";
+  return value >= threshold * 0.7 ? "warn" : "bad";
+}
+function meter(value, threshold) {
+  const m = el("div", "meter");
+  const fill = el("i");
+  fill.style.width = Math.max(0, Math.min(100, value)) + "%";
+  fill.classList.add(level(value, threshold));
+  const tick = el("b"); tick.style.left = threshold + "%"; tick.setAttribute("data-t", threshold);
+  m.appendChild(fill); m.appendChild(tick);
+  return m;
+}
+function gate(label, value, threshold, unit) {
+  const g = el("div", "gate");
+  g.appendChild(el("div", "lbl", label));
+  const v = el("div", "val", value.toFixed(value % 1 ? 1 : 0) + (unit || ""));
+  v.style.color = "var(--" + level(value, threshold).replace("ok", "good") + ")";
+  g.appendChild(v);
+  g.appendChild(meter(value, threshold));
+  return g;
+}
+const gatesBox = document.getElementById("gates");
+const attAvg = DATA.courses.reduce((s, c) => s + c.eval.attendance, 0) / DATA.courses.length;
+gatesBox.appendChild(gate("Посещаемость (нужно 70%)", attAvg, 70, "%"));
+gatesBox.appendChild(gate("Среднее РК1 и РК2 (нужно 50)", avg, 50, ""));
+const worst = DATA.courses.reduce((a, c) => c.eval.rm.score < a.eval.rm.score ? c : a, DATA.courses[0]);
+gatesBox.appendChild(gate("Худший РК1 — " + worst.code + " (нужно 25)", worst.eval.rm.score, 25, ""));
+
+/* ── Задания ───────────────────────────────────────────────────────────── */
+const FILTERS = [
+  { id: "late", name: "Просрочено", f: i => i.score === null && days(i.due, today) < 0 },
+  { id: "week", name: "Неделя", f: i => i.score === null && days(i.due, today) >= 0 && days(i.due, today) <= 7 },
+  { id: "month", name: "Месяц", f: i => i.score === null && days(i.due, today) >= 0 && days(i.due, today) <= 31 },
+  { id: "exam", name: "Экзамены", f: i => ["midterm", "endterm", "final"].includes(i.kind) },
+  { id: "done", name: "Сдано", f: i => i.score !== null },
+];
+let active = "week";
+const tabs = document.getElementById("tabs");
+FILTERS.forEach(f => {
+  const b = el("button", "tab" + (f.id === active ? " on" : ""));
+  b.type = "button";
+  b.appendChild(document.createTextNode(f.name));
+  b.appendChild(el("span", "c", String(allItems.filter(f.f).length)));
+  b.onclick = () => { active = f.id; [...tabs.children].forEach(x => x.classList.remove("on"));
+    b.classList.add("on"); draw(); };
+  tabs.appendChild(b);
+});
+function draw() {
+  const f = FILTERS.find(x => x.id === active);
+  const rows = document.getElementById("rows");
+  rows.textContent = "";
+  const list = allItems.filter(f.f).sort((a, b) => a.due < b.due ? -1 : 1);
+  if (!list.length) {
+    const tr = el("tr"), td = el("td", "empty", "Ничего нет — это хорошая новость.");
+    td.colSpan = 5; tr.appendChild(td); rows.appendChild(tr); return;
+  }
+  list.forEach(i => {
+    const tr = el("tr");
+    const n = days(i.due, today);
+    const st = el("td");
+    if (i.score !== null) st.appendChild(el("span", "pill ok", "сдано"));
+    else { const w = whenText(n); st.appendChild(el("span", "pill " + w.k, w.t)); }
+    tr.appendChild(st);
+    const dt = el("td"); dt.appendChild(el("span", "num", fmt(i.due))); tr.appendChild(dt);
+    const ti = el("td");
+    ti.appendChild(el("div", "t-title", i.name));
+    ti.appendChild(el("div", "t-sub", i.period === "final" ? "итоговый экзамен" : "рубеж " + i.period));
+    tr.appendChild(ti);
+    const cs = el("td"); const w = el("span", "crs");
+    w.appendChild(el("i", "dot")); w.appendChild(document.createTextNode(i.code));
+    cs.appendChild(w); tr.appendChild(cs);
+    const sc = el("td", "num");
+    sc.textContent = i.score !== null ? i.score + " / " + i.max : "— / " + i.max;
+    if (i.score === null) sc.style.color = "var(--ink-3)";
+    tr.appendChild(sc);
+    rows.appendChild(tr);
+  });
+}
+draw();
+
+/* ── Расписание ────────────────────────────────────────────────────────── */
+const dayBox = document.getElementById("day");
+document.getElementById("dayLbl").textContent = DATA.schedule.length + " пары";
+if (!DATA.schedule.length) dayBox.appendChild(el("div", "empty", "Сегодня пар нет."));
+let prevEnd = null;
+DATA.schedule.forEach(s => {
+  if (prevEnd) {
+    const gapMin = (+s.start.slice(0, 2) * 60 + +s.start.slice(3)) - (+prevEnd.slice(0, 2) * 60 + +prevEnd.slice(3));
+    if (gapMin >= 30) dayBox.appendChild(el("div", "gap", "перерыв " + gapMin + " мин"));
+  }
+  const row = el("div", "slot");
+  const tm = el("div", "tm"); tm.appendChild(el("div", null, s.start));
+  const e = el("div", null, s.end); e.style.color = "var(--ink-3)"; e.style.fontSize = "10px";
+  tm.appendChild(e); row.appendChild(tm);
+  const bd = el("div", "bd");
+  bd.appendChild(el("div", "n", s.title));
+  bd.appendChild(el("div", "m", s.kind + " · " + s.room));
+  row.appendChild(bd);
+  dayBox.appendChild(row);
+  prevEnd = s.end;
+});
+
+/* ── Курсы ─────────────────────────────────────────────────────────────── */
+const box = document.getElementById("courses");
+DATA.courses.forEach(c => {
+  const e = c.eval;
+  const card = el("div", "card");
+
+  const h = el("div", "cr-h");
+  const left = el("div");
+  left.appendChild(el("div", "code", c.code + " · " + c.credits + " кр."));
+  left.appendChild(el("h3", null, c.title));
+  left.appendChild(el("div", "who", c.teacher));
+  h.appendChild(left);
+  /* Буква по набранному сейчас показывала бы FX всем подряд в середине
+     триместра: несданное считается нулём. Поэтому статус словом, а рядом —
+     потолок, то есть что выйдет, если сдать всё оставшееся хорошо. */
+  const g = el("div", "g");
+  /* Три состояния, а не два: курс без нарушенных барьеров, но требующий 58 за
+     РК2, — это не «идёт ровно». */
+  const state = (e.risks.length || e.hopeless) ? ["bad", "под угрозой"]
+    : (e.need_re !== null && e.need_re > 50) ? ["warn", "нужно поднажать"]
+    : ["ok", "идёт ровно"];
+  g.appendChild(el("span", "pill " + state[0], state[1]));
+  const cl = el("div", "gp");
+  cl.textContent = "потолок " + Math.round(e.ceiling) + " · " + e.ceiling_letter;
+  g.appendChild(cl);
+  h.appendChild(g);
+  card.appendChild(h);
+
+  const rk = el("div", "rk");
+  [["РК1", e.rm, 25], ["РК2", e.re, 25], ["Экзамен", e.final, 50]].forEach(([k, a, gate]) => {
+    const d = el("div");
+    d.appendChild(el("div", "k", k));
+    const s = el("div", "s");
+    if (!a.graded) {                       // ничего не оценено — ноль тут врёт
+      s.appendChild(document.createTextNode("—"));
+      s.appendChild(el("small", null, a.started ? " ещё нет" : " не начат"));
+    } else if (a.complete) {
+      s.appendChild(document.createTextNode(String(a.score)));
+      s.appendChild(el("small", null, " из 100"));
+    } else {
+      s.appendChild(document.createTextNode(String(a.score)));
+      s.appendChild(el("small", null, " → " + a.ceiling));
+    }
+    d.appendChild(s);
+    d.appendChild(meter(a.graded ? a.score : 0, gate));
+    rk.appendChild(d);
+  });
+  card.appendChild(rk);
+
+  /* Показываем, только когда цифра что-то требует. «Нужно 25 за РК2» при
+     РК1 = 82 — это просто нижний порог, шум, а не совет. */
+  const needRe = e.need_re !== null && e.need_re > 25 ? e.need_re : null;
+  const needFin = e.need_final !== null && e.need_final > 25 ? e.need_final : null;
+  if (needRe !== null || needFin !== null) {
+    const n = el("div", "need");
+    n.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--accent)" ' +
+      'stroke-width="1.8" style="flex:none;margin-top:1px"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+    const t = el("div");
+    if (needRe !== null)
+      t.innerHTML = "Чтобы допустили до экзамена, нужно <b>" + needRe + "</b> за РК2.";
+    else
+      t.innerHTML = "Чтобы закрыть курс, нужно <b>" + needFin + "</b> за экзамен.";
+    n.appendChild(t);
+    card.appendChild(n);
+  }
+
+  const r = el("div", "risks");
+  r.appendChild(gate("Посещаемость", e.attendance, 70, "%"));   // тот же светофор, что и наверху
+  e.risks.forEach(x => {
+    const row = el("div", "risk");
+    row.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3zM12 10v4M12 17h.01"/></svg>';
+    row.appendChild(el("span", null, x));
+    r.appendChild(row);
+  });
+  card.appendChild(r);
+  box.appendChild(card);
+});
+
+/* ── Тема ──────────────────────────────────────────────────────────────── */
+document.getElementById("themeBtn").onclick = () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const dark = cur ? cur === "dark"
+    : matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
+};
+</script>
