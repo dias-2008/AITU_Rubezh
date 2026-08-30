@@ -6,6 +6,8 @@
     python rubezh.py probe            что именно отдаёт Moodle этого универа
     python rubezh.py ics              постоянная ссылка на календарь Moodle
     python rubezh.py build            собрать дашборд в build/dashboard.html
+    python rubezh.py open             пересобрать и открыть в браузере
+    python rubezh.py shortcut         положить ярлык на рабочий стол
     python rubezh.py serve [порт]     собрать и раздать (только этот компьютер)
     python rubezh.py serve --lan      ... и открыть для телефона в этой же сети
     python rubezh.py telegram         запомнить, кому слать уведомления
@@ -74,6 +76,44 @@ def cmd_build(_args):
     return 0
 
 
+def cmd_open(_args):
+    """Пересобрать дашборд свежими данными и открыть в браузере."""
+    import webbrowser
+    import web
+    out = web.build()
+    webbrowser.open(out.resolve().as_uri())
+    print("Открыл:", out)
+    return 0
+
+
+def cmd_shortcut(_args):
+    """Положить ярлык на рабочий стол. Windows."""
+    import subprocess
+    root = Path(__file__).parent.resolve()
+    target, icon = root / "AITU Rubezh.bat", root / "icon.ico"
+    if not target.exists():
+        raise SystemExit(f"Нет {target.name} — запусти из папки проекта.")
+
+    # WindowStyle 7 — свернуть окно консоли: она нужна только чтобы показать
+    # ошибку, если сборка упадёт, а в обычной жизни мелькать не должна.
+    script = (
+        "$d=[Environment]::GetFolderPath('Desktop');"
+        "$l=Join-Path $d 'AITU Rubezh.lnk';"
+        "$s=(New-Object -ComObject WScript.Shell).CreateShortcut($l);"
+        f"$s.TargetPath='{target}';"
+        f"$s.WorkingDirectory='{root}';"
+        + (f"$s.IconLocation='{icon}';" if icon.exists() else "")
+        + "$s.Description='Пересобрать дашборд и открыть в браузере';"
+        "$s.WindowStyle=7;$s.Save();$l"
+    )
+    done = subprocess.run(["powershell", "-NoProfile", "-Command", script],
+                          capture_output=True, text=True)
+    if done.returncode != 0:
+        raise SystemExit(f"Не вышло создать ярлык: {done.stderr.strip()[:300]}")
+    print("Ярлык на рабочем столе создан.")
+    return 0
+
+
 def cmd_serve(args):
     import web
     ports = [a for a in args if a.isdigit()]
@@ -99,7 +139,7 @@ def cmd_watch(args):
     return watch.run(dry="--dry" in args)
 
 
-COMMANDS = {"watch": cmd_watch, "telegram": cmd_telegram,
+COMMANDS = {"open": cmd_open, "shortcut": cmd_shortcut, "watch": cmd_watch, "telegram": cmd_telegram,
             "build": cmd_build, "serve": cmd_serve, "login": cmd_login, "status": cmd_status, "probe": cmd_probe, "ics": cmd_ics}
 
 
