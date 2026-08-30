@@ -7,10 +7,16 @@
 компьютере, как и сессии. Команда `serve` нужна только чтобы открыть дашборд с
 телефона по локальной сети — она поднимает обычный http.server, без зависимостей.
 
-    python rubezh.py build     собрать build/dashboard.html
-    python rubezh.py serve     то же самое плюс раздача на 0.0.0.0:8000
+    python rubezh.py build       собрать build/dashboard.html
+    python rubezh.py serve       раздать, но только этому компьютеру (127.0.0.1)
+    python rubezh.py serve --lan открыть для телефона в той же сети
+
+Наружу отдаём только по явному --lan и только по неугадываемому адресу: на
+странице оценки и посещаемость, а порт 8000 в университетской сети находится
+сканированием за секунды.
 """
 import json
+import secrets
 import socket
 from datetime import datetime
 from functools import partial
@@ -102,13 +108,61 @@ def _lan_ip():
         sock.close()
 
 
-def serve(port=8000):
+class _TokenHandler(SimpleHTTPRequestHandler):
+    """Отдаёт файлы только по адресу с секретным префиксом.
+
+    Дашборд — это твоё имя, оценки, посещаемость и список того, что ты
+    заваливаешь. В университетской сети порт 8000 находится сканированием за
+    секунды, поэтому в режиме --lan адрес обязан быть неугадываемым.
+    """
+    token = None
+
+    def _strip_token(self):
+        if not self.token:
+            return True
+        prefix = "/" + self.token
+        if self.path == prefix:
+            self.path = "/"
+            return True
+        if self.path.startswith(prefix + "/"):
+            self.path = self.path[len(prefix):]
+            return True
+        self.send_error(404)
+        return False
+
+    def do_GET(self):
+        if self._strip_token():
+            super().do_GET()
+
+    def do_HEAD(self):
+        if self._strip_token():
+            super().do_HEAD()
+
+    def log_message(self, fmt, *args):
+        pass          # не сорить в консоль на каждый запрос
+
+
+def serve(port=8000, lan=False):
+    """По умолчанию только этот компьютер. Наружу — осознанно, через --lan."""
     out = build()
-    handler = partial(SimpleHTTPRequestHandler, directory=str(out.parent))
-    server = ThreadingHTTPServer(("0.0.0.0", port), handler)
+    token = secrets.token_urlsafe(9) if lan else None
+    _TokenHandler.token = token     # атрибут класса: partial создаёт экземпляры сам
+    handler = partial(_TokenHandler, directory=str(out.parent))
+
+    host = "0.0.0.0" if lan else "127.0.0.1"
+    server = ThreadingHTTPServer((host, port), handler)
+    path = f"/{token}/dashboard.html" if token else "/dashboard.html"
+
     print(f"Дашборд собран: {out}")
-    print(f"  на этом компьютере : http://localhost:{port}/dashboard.html")
-    print(f"  с телефона в той же сети: http://{_lan_ip()}:{port}/dashboard.html")
+    print(f"  на этом компьютере: http://localhost:{port}{path}")
+    if lan:
+        print(f"  с телефона в этой же сети: http://{_lan_ip()}:{port}{path}")
+        print("\n  ВНИМАНИЕ: страница видна всем в этой сети, кто знает адрес,")
+        print("  а на ней твои оценки и посещаемость. Адрес одноразовый —")
+        print("  при следующем запуске будет другой. Не пересылай его.")
+    else:
+        print("  снаружи недоступно. Нужен телефон — запусти: "
+              f"python rubezh.py serve {port} --lan")
     print("\nCtrl+C — остановить.")
     try:
         server.serve_forever()

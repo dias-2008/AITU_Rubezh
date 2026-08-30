@@ -12,6 +12,7 @@
     schtasks /create /tn "AITU Rubezh" /tr "c:\\Projects\\University\\rubezh\\watch.bat" ^
              /sc daily /st 09:00
 """
+import html
 import json
 from datetime import datetime
 from pathlib import Path
@@ -154,6 +155,17 @@ def snapshot():
     return snap
 
 
+def esc(value):
+    """Экранировать чужой текст перед вставкой в сообщение.
+
+    Сообщения уходят с parse_mode=HTML. Название курса вида «Лаб <не сдана>»
+    или амперсанд в теме ломают разбор, Telegram отвечает 400, и уведомление
+    пропадает — а инструмент по замыслу молчит, когда новостей нет, так что
+    потерю не заметить. Соседний tg-digest делает ровно так же (html.escape).
+    """
+    return html.escape(str(value), quote=False)
+
+
 def compare(old, new):
     """Человеческие строки об изменениях. Пусто — значит ничего не поменялось."""
     lines, urgent = [], False
@@ -178,28 +190,28 @@ def compare(old, new):
         appeared = set(new["courses"]) - set(old.get("courses", {}))
         gone = set(old.get("courses", {})) - set(new["courses"])
         for key in sorted(appeared):
-            lines.append(f"📚 Новый курс: <b>{new['courses'][key]}</b>")
+            lines.append(f"📚 Новый курс: <b>{esc(new['courses'][key])}</b>")
         for key in sorted(gone):
-            lines.append(f"➖ Курс пропал: {old['courses'][key]}")
+            lines.append(f"➖ Курс пропал: {esc(old['courses'][key])}")
 
     if both("deadlines"):
         old_dl, new_dl = old.get("deadlines", {}), new["deadlines"]
         for key in sorted(set(new_dl) - set(old_dl)):
             item = new_dl[key]
-            lines.append(f"🆕 Дедлайн: <b>{item['name']}</b> — {_when(item['when'])}"
-                         + (f" ({item['course']})" if item["course"] else ""))
+            lines.append(f"🆕 Дедлайн: <b>{esc(item['name'])}</b> — {_when(item['when'])}"
+                         + (f" ({esc(item['course'])})" if item["course"] else ""))
         for key in sorted(set(new_dl) & set(old_dl)):
             if new_dl[key]["when"] != old_dl[key]["when"]:
-                lines.append(f"⏰ Перенос: <b>{new_dl[key]['name']}</b> "
+                lines.append(f"⏰ Перенос: <b>{esc(new_dl[key]['name'])}</b> "
                              f"{_when(old_dl[key]['when'])} → {_when(new_dl[key]['when'])}")
                 urgent = True
         for key in sorted(set(old_dl) - set(new_dl)):
-            lines.append(f"✔️ Больше не висит: {old_dl[key]['name']}")
+            lines.append(f"✔️ Больше не висит: {esc(old_dl[key]['name'])}")
 
     if both("schedule"):
         was_sch, now_sch = old.get("schedule"), new.get("schedule")
         if not was_sch and now_sch:
-            lines.append(f"🗓 Появилось расписание группы {new.get('group')}: {now_sch} занятий")
+            lines.append(f"🗓 Появилось расписание группы {esc(new.get('group'))}: {now_sch} занятий")
         elif was_sch and now_sch and was_sch != now_sch:
             lines.append(f"🗓 Расписание изменилось: было {was_sch}, стало {now_sch}")
 

@@ -70,27 +70,54 @@ def chat_id():
     return _secrets().get("telegram_chat_id")
 
 
-def link():
-    """Найти, кому слать: смотрим, кто последним написал боту."""
+def link(chat_id=None):
+    """Найти, кому слать уведомления.
+
+    Раньше здесь бралась просто последняя написавшая боту переписка. Это дыра:
+    имя бота попадает к другим студентам, и любой, кто напишет ему раньше, чем
+    ты запустишь эту команду, тихо станет получателем твоих оценок. Поэтому
+    молча выбираем только когда кандидат ровно один; иначе показываем список и
+    просим указать явно.
+    """
+    if chat_id is not None:
+        _save_secret("telegram_chat_id", int(chat_id))
+        print(f"Буду писать в chat_id {chat_id}. Сохранено в secrets.json.")
+        return int(chat_id)
+
     response = requests.get(API.format(token=token(), method="getUpdates"), timeout=30)
     if not response.ok:
         raise SystemExit(f"Telegram ответил {response.status_code}: {response.text[:200]}")
-    updates = response.json().get("result", [])
+
     chats = {}
-    for update in updates:
+    for update in response.json().get("result", []):
         message = update.get("message") or update.get("edited_message") or {}
         chat = message.get("chat") or {}
         if chat.get("id"):
-            chats[chat["id"]] = chat.get("first_name") or chat.get("title") or str(chat["id"])
+            chats[chat["id"]] = {
+                "name": chat.get("first_name") or chat.get("title") or str(chat["id"]),
+                "private": chat.get("type") == "private",
+            }
     if not chats:
         raise SystemExit(
             "Боту никто не писал. Открой своего бота в Telegram, нажми Start, отправь любое "
             "сообщение и запусти команду ещё раз.\n"
             "Учти: Telegram хранит эти обновления около суток."
         )
-    found, name = list(chats.items())[-1]
+
+    # Уведомления — в личку, а не в группу, куда бот случайно попал.
+    candidates = {i: c for i, c in chats.items() if c["private"]} or chats
+    if len(candidates) > 1:
+        listing = "\n".join(f"  --chat-id {i}   {c['name']}" for i, c in candidates.items())
+        raise SystemExit(
+            "Боту писал не один человек, и угадывать тут нельзя — иначе твои оценки\n"
+            "уедут чужому. Выбери себя явно:\n\n" + listing +
+            "\n\n  python rubezh.py telegram --chat-id <id>"
+        )
+
+    found, info = next(iter(candidates.items()))
     _save_secret("telegram_chat_id", found)
-    print(f"Буду писать сюда: {name} (chat_id {found}). Сохранено в secrets.json.")
+    print(f"Буду писать сюда: {info['name']} (chat_id {found}). Сохранено в secrets.json.")
+    print("Если это не ты — перезапусти с нужным --chat-id.")
     return found
 
 

@@ -6,8 +6,10 @@
     python rubezh.py probe            что именно отдаёт Moodle этого универа
     python rubezh.py ics              постоянная ссылка на календарь Moodle
     python rubezh.py build            собрать дашборд в build/dashboard.html
-    python rubezh.py serve [порт]     собрать и раздать, чтобы открыть с телефона
+    python rubezh.py serve [порт]     собрать и раздать (только этот компьютер)
+    python rubezh.py serve --lan      ... и открыть для телефона в этой же сети
     python rubezh.py telegram         запомнить, кому слать уведомления
+    python rubezh.py telegram --chat-id <id>   указать получателя явно
     python rubezh.py watch [--dry]    проверить изменения и написать в Telegram
 """
 import json
@@ -74,14 +76,21 @@ def cmd_build(_args):
 
 def cmd_serve(args):
     import web
-    web.serve(int(args[0]) if args else 8000)
+    ports = [a for a in args if a.isdigit()]
+    web.serve(int(ports[0]) if ports else 8000, lan="--lan" in args)
     return 0
 
 
-def cmd_telegram(_args):
+def cmd_telegram(args):
     """Один раз запомнить, кому слать уведомления."""
     import notify
-    notify.link()
+    chat_id = None
+    if "--chat-id" in args:
+        position = args.index("--chat-id")
+        if position + 1 >= len(args):
+            raise SystemExit("После --chat-id нужен номер.")
+        chat_id = args[position + 1]
+    notify.link(chat_id)
     return 0
 
 
