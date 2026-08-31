@@ -197,6 +197,16 @@ tbody tr:hover{background:var(--surface-2)}
 .risk svg{width:14px;height:14px;flex:none;margin-top:2px;stroke:var(--bad);fill:none;stroke-width:1.8}
 
 .note{font-size:12px;color:var(--ink-3);text-align:center;padding:4px 0 0}
+/* Единственное на дашборде, что требует действия руками — и выглядеть должно так */
+.relog{border:1px solid var(--warn);background:var(--warn-soft);border-radius:var(--r);
+       padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.relog .txt{flex:1;min-width:220px;font-size:13px;color:var(--warn);font-weight:500}
+.relog .txt small{display:block;font-weight:400;font-size:11.5px;margin-top:3px;opacity:.85}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;
+     background:var(--accent);color:#fff;text-decoration:none;font-size:13px;font-weight:600;
+     white-space:nowrap}
+.btn:hover{filter:brightness(1.08)}
+.btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
 .demo{display:flex;align-items:center;gap:8px;padding:8px 13px;border-radius:var(--r);
       background:var(--warn-soft);color:var(--warn);font-size:12.5px;font-weight:500}
 
@@ -344,7 +354,31 @@ if (DATA.demo) {
     '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>' +
     '<span>Демо-режим: баллы придуманы, чтобы показать работу. Настоящие появятся после 07.09.</span>';
   document.getElementById("demoBanner").appendChild(b);
-} else if ((DATA.notes || []).length) {
+}
+
+/* Сессия протухла — кнопка прямо здесь. Дашборд лежит на диске и сам ничего
+   запустить не может, поэтому ссылка своей схемы rubezh://, которую Windows
+   отдаёт нашему же скрипту. Схему включает `python rubezh.py register`. */
+const SERVICE_NAMES = { lms: "Moodle", du: "портал AITU", outlook: "Outlook" };
+(DATA.needs_login || []).forEach(svc => {
+  const box = el("div", "relog");
+  const txt = el("div", "txt");
+  txt.appendChild(document.createTextNode("Сессия " + (SERVICE_NAMES[svc] || svc)
+    + " истекла — данные не обновятся, пока не войдёшь."));
+  const hint = el("small");
+  hint.textContent = "Кнопка не сработала? Выполни: python rubezh.py login " + svc;
+  txt.appendChild(hint);
+  box.appendChild(txt);
+  const btn = el("a", "btn");
+  btn.href = "rubezh://login/" + encodeURIComponent(svc);
+  btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>'
+    + '<path d="M10 17l5-5-5-5M15 12H3"/></svg>';
+  btn.appendChild(document.createTextNode("Войти"));
+  box.appendChild(btn);
+  document.getElementById("demoBanner").appendChild(box);
+});
+
+if (!DATA.demo && (DATA.notes || []).length) {
   /* Пустой экран без объяснения выглядит как поломка. Говорим прямо, чего
      ещё нет и почему. */
   const b = el("div", "card");

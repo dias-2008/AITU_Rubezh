@@ -8,6 +8,7 @@
     python rubezh.py build [--demo]   собрать дашборд (--demo — на выдуманных данных)
     python rubezh.py open             пересобрать и открыть в браузере
     python rubezh.py shortcut         положить ярлык на рабочий стол
+    python rubezh.py register         включить кнопки «Войти» на дашборде
     python rubezh.py serve [порт]     собрать и раздать (только этот компьютер)
     python rubezh.py serve --lan      ... и открыть для телефона в этой же сети
     python rubezh.py telegram         запомнить, кому слать уведомления
@@ -86,6 +87,63 @@ def cmd_open(_args):
     return 0
 
 
+def cmd_protocol(args):
+    """Обработчик ссылок rubezh://login/<сервис> с самого дашборда.
+
+    Дашборд — обычный файл на диске, запускать из него ничего нельзя. Поэтому
+    кнопка «Войти» открывает ссылку своей схемы, Windows отдаёт её сюда, мы
+    показываем окно входа и сразу пересобираем дашборд свежими данными.
+    """
+    url = (args[0] if args else "").strip()
+    prefix = "rubezh://"
+    if not url.startswith(prefix):
+        raise SystemExit(f"Не наша ссылка: {url[:60]}")
+
+    parts = [p for p in url[len(prefix):].strip("/").split("/") if p]
+    if len(parts) != 2 or parts[0] != "login":
+        raise SystemExit(f"Не понимаю, что делать: {url[:60]}")
+
+    # Сервис берём только из известного списка. Ссылку может подсунуть кто
+    # угодно — в запуск не должно попасть ничего, кроме заранее известных имён.
+    service = parts[1]
+    if service not in session.SERVICES:
+        raise SystemExit(f"Неизвестный сервис: {service[:40]}")
+
+    ok = session.login(service)
+    if ok:
+        import webbrowser
+        import web
+        webbrowser.open(web.build().resolve().as_uri())
+    return 0 if ok else 1
+
+
+def cmd_register(_args):
+    """Зарегистрировать схему rubezh:// для текущего пользователя."""
+    import winreg
+    root = Path(__file__).parent.resolve()
+    exe = Path(sys.executable).with_name("pythonw.exe")
+    if not exe.exists():
+        exe = Path(sys.executable)
+    command = f'"{exe}" "{root / "rubezh.py"}" protocol "%1"'
+
+    with winreg.CreateKey(winreg.HKEY_CURRENT_USER, r"Software\Classes\rubezh") as key:
+        winreg.SetValueEx(key, None, 0, winreg.REG_SZ, "URL:AITU Rubezh")
+        winreg.SetValueEx(key, "URL Protocol", 0, winreg.REG_SZ, "")
+    icon = root / "icon.ico"
+    if icon.exists():
+        with winreg.CreateKey(winreg.HKEY_CURRENT_USER,
+                              r"Software\Classes\rubezh\DefaultIcon") as key:
+            winreg.SetValueEx(key, None, 0, winreg.REG_SZ, str(icon))
+    with winreg.CreateKey(winreg.HKEY_CURRENT_USER,
+                          r"Software\Classes\rubezh\shell\open\command") as key:
+        winreg.SetValueEx(key, None, 0, winreg.REG_SZ, command)
+
+    print("Схема rubezh:// зарегистрирована — кнопки «Войти» на дашборде работают.")
+    print("Только для твоей учётной записи, права администратора не нужны.")
+    print(r'Убрать: reg delete HKCU\Software\Classes\rubezh /f')
+    return 0
+
+
 def cmd_shortcut(_args):
     """Положить ярлык на рабочий стол. Windows."""
     import subprocess
@@ -140,7 +198,8 @@ def cmd_watch(args):
     return watch.run(dry="--dry" in args)
 
 
-COMMANDS = {"open": cmd_open, "shortcut": cmd_shortcut, "watch": cmd_watch, "telegram": cmd_telegram,
+COMMANDS = {"open": cmd_open, "shortcut": cmd_shortcut,
+            "protocol": cmd_protocol, "register": cmd_register, "watch": cmd_watch, "telegram": cmd_telegram,
             "build": cmd_build, "serve": cmd_serve, "login": cmd_login, "status": cmd_status, "probe": cmd_probe, "ics": cmd_ics}
 
 

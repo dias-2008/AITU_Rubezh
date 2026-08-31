@@ -144,7 +144,7 @@ def gather(today=None):
     войти», а не с трассировкой стека из ярлыка на рабочем столе.
     """
     today = today or date.today()
-    notes, courses, loose, schedule = [], [], [], []
+    notes, courses, loose, schedule, needs = [], [], [], [], []
 
     # Группа из профиля надёжнее подслушанного запроса: профиль — это факт,
     # а перехват зависит от того, успела ли страница его отправить.
@@ -157,15 +157,15 @@ def gather(today=None):
         courses = _courses()
         loose = _attach_deadlines(courses, today)
     except Exception:
-        notes.append("Moodle недоступен — нужно войти: python rubezh.py login lms")
+        needs.append("lms")
 
     try:
         schedule = _schedule(group)
     except Exception:
-        notes.append("Портал недоступен — нужно войти: python rubezh.py login du")
+        needs.append("du")
 
     # Честно объясняем пустоту, вместо того чтобы показывать пустой экран молча.
-    if not notes:
+    if not needs:
         if not courses:
             notes.append("Курсов в Moodle пока нет — появятся, когда начнётся обучение.")
         elif not any(c["items"] for c in courses):
@@ -187,4 +187,5 @@ def gather(today=None):
         "key_dates": aitu.key_dates(today),
         "schedule": schedule,
         "notes": notes,
+        "needs_login": needs,
     }
