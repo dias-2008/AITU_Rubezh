@@ -31,8 +31,17 @@ BUILD = ROOT / "build"
 PLACEHOLDER = "__RUBEZH_DATA__"
 
 
-def payload(demo=True):
-    """Данные для дашборда. Пока только демо — живые появятся после 07.09."""
+def payload(demo=False):
+    """Данные для дашборда.
+
+    По умолчанию настоящие: пусть лучше будет честно пусто, чем правдоподобно
+    неверно. Демо остаётся под флагом — оно нужно, чтобы посмотреть на инструмент
+    до всякого логина.
+    """
+    if not demo:
+        import live
+        return live.gather()
+
     import demo as demo_data
 
     courses = []
@@ -58,9 +67,9 @@ def payload(demo=True):
     }
 
 
-def fragment(data=None):
+def fragment(data=None, demo=False):
     """Дашборд без обвязки <html>: title, стили, разметка, скрипт."""
-    data = payload() if data is None else data
+    data = payload(demo) if data is None else data
     body = TEMPLATE.read_text(encoding="utf-8")
     if PLACEHOLDER not in body:
         raise SystemExit(f"В шаблоне нет {PLACEHOLDER} — некуда вставить данные.")
@@ -77,7 +86,7 @@ DOCTYPE = """<!doctype html>
 """
 
 
-def build():
+def build(demo=False):
     """Готовый файл, который открывается с диска без всякого сервера.
 
     Шаблон — фрагмент без <html>: сначала title и стили, потом разметка.
@@ -86,7 +95,7 @@ def build():
     BUILD.mkdir(exist_ok=True)
     out = BUILD / "dashboard.html"
     marker = '<div class="shell">'
-    head, found, rest = fragment().partition(marker)
+    head, found, rest = fragment(demo=demo).partition(marker)
     if not found:
         raise SystemExit(f"В шаблоне нет {marker} — не понять, где кончается head.")
     out.write_text(
@@ -142,9 +151,9 @@ class _TokenHandler(SimpleHTTPRequestHandler):
         pass          # не сорить в консоль на каждый запрос
 
 
-def serve(port=8000, lan=False):
+def serve(port=8000, lan=False, demo=False):
     """По умолчанию только этот компьютер. Наружу — осознанно, через --lan."""
-    out = build()
+    out = build(demo)
     token = secrets.token_urlsafe(9) if lan else None
     _TokenHandler.token = token     # атрибут класса: partial создаёт экземпляры сам
     handler = partial(_TokenHandler, directory=str(out.parent))

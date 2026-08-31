@@ -123,20 +123,22 @@ def _outlook_revive(page):
 
 
 def _du_ready(page):
-    """Портал — JS-приложение, судить можно только по отрисованному.
+    """Признак входа на портал — JWT в localStorage.
 
-    Признак «не вошли» — кнопка входа корпоративной почтой на странице.
-    Как её нет и мы всё ещё на портале, значит внутри.
+    Раньше здесь считались символы в теле страницы: «текста много и кнопки входа
+    не видно — значит вошли». Признак косвенный и срабатывал раньше времени —
+    на полуотрисованной странице, когда токена ещё нет. Из-за этого вход
+    считался успешным, а сохранять было нечего, и сессия не переживала перезапуск.
+
+    Токен — это и есть сессия: если он есть, мы точно внутри, и ровно его надо
+    сохранить. Положительный признак вместо отсутствия отрицательного.
     """
     if "du.astanait.edu.kz" not in page.url:
         return False
     try:
-        text = page.inner_text("body").lower()
+        return bool(page.evaluate("() => window.localStorage.getItem('token')"))
     except Exception:
-        return False
-    # Пока страница грузится, тела почти нет — и «кнопки входа не видно» тоже.
-    # На этом уже обжигались: пустая страница выглядела как успешный вход.
-    return len(text.strip()) > 200 and "sign in with corporate" not in text
+        return False          # страница в этот момент переходила — не мешаем
 
 
 def _du_revive(page):
@@ -187,11 +189,15 @@ def _state_file(service):
 def _save_cookies(service, context):
     """Сессионные куки в профиле не остаются — сохраняем их руками.
 
-    Только куки, и намеренно. `context.storage_state()` кроме кук собирает ещё и
-    localStorage, а для этого Playwright открывает по временной странице на каждый
-    origin. Если дёргать это в цикле раз в две секунды, окна начинают мигать и
-    залогиниться физически невозможно. `context.cookies()` не открывает ничего,
-    а больше нам ничего и не нужно — восстанавливаем мы тоже только куки.
+    Только куки, и намеренно: эту функцию зовут в цикле раз в две секунды.
+    `context.storage_state()` кроме кук собирает ещё и localStorage, а для этого
+    Playwright открывает по временной странице на каждый origin — окна начинают
+    мигать, и залогиниться физически невозможно. `context.cookies()` не
+    открывает ничего.
+
+    localStorage при этом тоже нужен — портал держит там свой JWT, и одними
+    куками его сессия не восстанавливается. Но он снимается отдельно, разово,
+    в момент успеха: см. `_save_storage`.
     """
     _state_file(service).write_text(
         json.dumps({"cookies": context.cookies()}), encoding="utf-8"
@@ -208,6 +214,45 @@ def _restore_cookies(service, context):
         return
     if cookies:
         context.add_cookies(cookies)
+
+
+def _storage_file(service):
+    return profile_dir(service) / "localstorage.json"
+
+
+def _save_storage(service, page):
+    """Сохранить localStorage страницы.
+
+    Одними куками не обойтись: портал держит свой JWT именно в localStorage, и
+    сессия, сохранённая только куками, у него не восстанавливается вообще.
+    Раньше это делал `storage_state()`, но его нельзя звать в цикле — он
+    открывает временные страницы и окна начинают мигать. Поэтому читаем прямо со
+    страницы и только в момент успеха: ровно один вызов, никаких окон.
+    """
+    try:
+        raw = page.evaluate("() => JSON.stringify(window.localStorage)")
+    except Exception:
+        return
+    if raw and raw != "{}":
+        _storage_file(service).write_text(raw, encoding="utf-8")
+
+
+def _restore_storage(service, context):
+    """Подложить localStorage до того, как на странице запустятся свои скрипты."""
+    path = _storage_file(service)
+    if not path.exists():
+        return
+    try:
+        raw = path.read_text(encoding="utf-8")
+        json.loads(raw)                     # мусор в init-script не отправляем
+    except (ValueError, OSError):
+        return
+    # Не затираем то, что уже есть: свежее значение всегда важнее сохранённого.
+    context.add_init_script(
+        "(() => { try { const d = " + raw + ";"
+        " for (const k in d) if (localStorage.getItem(k) === null)"
+        " localStorage.setItem(k, d[k]); } catch (e) {} })()"
+    )
 
 
 # Что не нужно фоновой проверке: она читает данные, а не смотрит на страницу.
@@ -256,6 +301,7 @@ def browser(service, headless=True, lean=False):
                 if route.request.resource_type in LEAN_BLOCKED else route.continue_(),
             )
         _restore_cookies(service, context)
+        _restore_storage(service, context)
         try:
             yield context
         finally:
@@ -289,6 +335,7 @@ def connect(service):
                     f"Не смог войти сам. Запусти: python rubezh.py login {service}"
                 )
             _save_cookies(service, context)
+            _save_storage(service, page)
             print("Готово, вошёл без тебя.", file=sys.stderr)
 
         yield context, page
@@ -307,6 +354,7 @@ def is_logged_in(service):
                 return True
             if spec["revive"](page):
                 _save_cookies(service, context)
+                _save_storage(service, page)
                 return True
             return False
     except NeedsHuman:
@@ -323,26 +371,34 @@ def login(service):
     print("На экране «Stay signed in?» жми Yes — тогда входить придётся сильно реже.\n")
 
     with browser(service, headless=False) as context:
-        page = context.pages[0] if context.pages else context.new_page()
+        # Своя вкладка, а не context.pages[0]: стартовую about:blank Chromium
+        # может закрыть сам, восстанавливая прошлую сессию профиля, и тогда
+        # цикл мгновенно решал, что окно закрыли, и вход «не подтверждался».
+        page = context.new_page()
         page.goto(spec["login_url"], wait_until="domcontentloaded", timeout=120000)
 
         deadline = time.time() + LOGIN_TIMEOUT_SEC
         while time.time() < deadline:
-            if page.is_closed():
+            # Человек мог уйти логиниться в соседнюю вкладку — смотрим на все.
+            alive = [p for p in context.pages if not p.is_closed()]
+            if not alive:
                 break
+            page = alive[0] if page.is_closed() else page
             # Снимок кук на каждом круге. Сессионные куки умирают вместе с окном,
             # поэтому нельзя ждать «идеального момента» — сохраняем по дороге.
             try:
                 _save_cookies(service, context)
             except Exception:
                 pass
-            try:
-                if spec["ready"](page):
-                    _save_cookies(service, context)
-                    print(f"Готово, сессия {spec['title']} сохранена.")
-                    return True
-            except Exception:
-                pass  # страница в этот момент могла редиректиться — не мешаем
+            for candidate in alive:
+                try:
+                    if spec["ready"](candidate):
+                        _save_cookies(service, context)
+                        _save_storage(service, candidate)
+                        print(f"Готово, сессия {spec['title']} сохранена.")
+                        return True
+                except Exception:
+                    pass  # страница могла редиректиться — не мешаем
             time.sleep(2)
 
     # Окно закрылось или вышло время. Верить своей же проверке «на лету» нельзя:

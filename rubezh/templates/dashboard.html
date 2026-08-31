@@ -328,7 +328,9 @@ function whenText(n) {
 document.getElementById("brandSub").textContent = DATA.group;
 document.getElementById("hello").textContent = "Привет, " + DATA.student;
 document.getElementById("context").textContent =
-  DATA.term + " · группа " + DATA.group + " · " + DATA.courses.length + " дисциплин";
+  [DATA.term, DATA.group ? "группа " + DATA.group : null,
+   DATA.courses.length ? DATA.courses.length + " дисциплин" : "дисциплин пока нет"]
+    .filter(Boolean).join(" · ");
 document.getElementById("todayLbl").textContent =
   DOW[(today.getDay() + 6) % 7] + ", " + fmt(DATA.today);
 document.getElementById("srcNote").textContent = DATA.demo ? "демо-данные" : "живые данные";
@@ -342,20 +344,47 @@ if (DATA.demo) {
     '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>' +
     '<span>Демо-режим: баллы придуманы, чтобы показать работу. Настоящие появятся после 07.09.</span>';
   document.getElementById("demoBanner").appendChild(b);
+} else if ((DATA.notes || []).length) {
+  /* Пустой экран без объяснения выглядит как поломка. Говорим прямо, чего
+     ещё нет и почему. */
+  const b = el("div", "card");
+  b.style.cssText = "padding:11px 14px;font-size:12.5px;color:var(--ink-2)";
+  const head = el("div", "eyebrow", "почему тут пусто");
+  head.style.marginBottom = "6px";
+  b.appendChild(head);
+  DATA.notes.forEach(text => {
+    const row = el("div");
+    row.style.cssText = "display:flex;gap:7px;align-items:baseline;padding:2px 0";
+    const dot = el("i", "dot");
+    dot.style.background = "var(--ink-3)";
+    row.appendChild(dot);
+    row.appendChild(el("span", null, text));
+    b.appendChild(row);
+  });
+  document.getElementById("demoBanner").appendChild(b);
 }
 
 /* ── Плитки ────────────────────────────────────────────────────────────── */
+/* В живом режиме журнал Moodle закрыт, поэтому eval у курса может быть null,
+   а списки — пустыми. Считаем только по тому, что действительно есть: пустой
+   дашборд честнее, чем нули, которые выглядят как двойки. */
 const allItems = [];
-DATA.courses.forEach(c => c.items.forEach(i =>
-  allItems.push(Object.assign({}, i, { code: c.code, course: c.title }))));
-const graded = allItems.filter(i => i.score !== null);
-const pending = allItems.filter(i => i.score === null);
-const late = pending.filter(i => days(i.due, today) < 0);
-const week = pending.filter(i => { const n = days(i.due, today); return n >= 0 && n <= 7; });
-const avg = DATA.courses.length
-  ? DATA.courses.reduce((s, c) => s + c.eval.average_rk, 0) / DATA.courses.length : 0;
+DATA.courses.forEach(c => (c.items || []).forEach(i =>
+  allItems.push(Object.assign({}, i, { code: c.code || "", course: c.title }))));
+(DATA.loose_deadlines || []).forEach(i =>
+  allItems.push(Object.assign({}, i, { code: i.code || "", course: i.course || "" })));
+
+const scored = DATA.courses.filter(c => c.eval);      // курсы с открытым журналом
+const hasGrades = scored.length > 0;
+const graded = allItems.filter(i => i.score !== null && i.score !== undefined);
+const pending = allItems.filter(i => i.score === null || i.score === undefined);
+const avg = hasGrades
+  ? scored.reduce((s, c) => s + c.eval.average_rk, 0) / scored.length : null;
+const withAtt = scored.filter(c => c.eval.attendance !== null);
+const attAvg = withAtt.length
+  ? withAtt.reduce((s, c) => s + c.eval.attendance, 0) / withAtt.length : null;
 const nextRk = DATA.key_dates.find(d => d.kind === "rk" && days(d.date, today) >= 0);
-const atRisk = DATA.courses.filter(c => c.eval.risks.length);
+const atRisk = scored.filter(c => c.eval.risks.length);
 
 function tile(label, value, unit, sub, cls) {
   const n = el("div", "tile");
@@ -368,14 +397,20 @@ function tile(label, value, unit, sub, cls) {
   return n;
 }
 const tiles = document.getElementById("tiles");
-tiles.appendChild(tile("Сдано", graded.length + " / " + allItems.length, "",
-  pending.length + " впереди"));
-tiles.appendChild(tile("Среднее по РК", avg.toFixed(1), "из 100",
-  avg >= 50 ? "выше рубежа допуска" : "ниже рубежа 50"));
+tiles.appendChild(allItems.length
+  ? tile("Сдано", graded.length + " / " + allItems.length, "", pending.length + " впереди")
+  : tile("Задания", "—", "", "дедлайнов пока нет"));
+tiles.appendChild(hasGrades
+  ? tile("Среднее по РК", avg.toFixed(1), "из 100",
+         avg >= 50 ? "выше рубежа допуска" : "ниже рубежа 50")
+  : tile("Среднее по РК", "—", "", "оценок ещё нет"));
 tiles.appendChild(tile("Ближайший рубеж", nextRk ? nextRk.span : "—", "",
   nextRk ? "через " + days(nextRk.date, today) + " дн." : "все пройдены"));
-tiles.appendChild(tile("Под угрозой", String(atRisk.length), "из " + DATA.courses.length,
-  atRisk.length ? atRisk.map(c => c.code.split(" ")[0]).join(", ") : "рисков нет"));
+tiles.appendChild(DATA.courses.length
+  ? tile("Под угрозой", String(atRisk.length), "из " + DATA.courses.length,
+         atRisk.length ? atRisk.map(c => (c.code || c.title).split(" ")[0]).join(", ")
+                       : (hasGrades ? "рисков нет" : "пока не по чему судить"))
+  : tile("Курсы", "—", "", "ещё не появились"));
 
 /* ── Ключевые даты ─────────────────────────────────────────────────────── */
 const kd = document.getElementById("keyDates");
@@ -435,11 +470,33 @@ function gate(label, value, threshold, unit) {
   return g;
 }
 const gatesBox = document.getElementById("gates");
-const attAvg = DATA.courses.reduce((s, c) => s + c.eval.attendance, 0) / DATA.courses.length;
-gatesBox.appendChild(gate("Посещаемость (нужно 70%)", attAvg, 70, "%"));
-gatesBox.appendChild(gate("Среднее РК1 и РК2 (нужно 50)", avg, 50, ""));
-const worst = DATA.courses.reduce((a, c) => c.eval.rm.score < a.eval.rm.score ? c : a, DATA.courses[0]);
-gatesBox.appendChild(gate("Худший РК1 — " + worst.code + " (нужно 25)", worst.eval.rm.score, 25, ""));
+if (attAvg !== null) gatesBox.appendChild(gate("Посещаемость (нужно 70%)", attAvg, 70, "%"));
+if (hasGrades) {
+  gatesBox.appendChild(gate("Среднее РК1 и РК2 (нужно 50)", avg, 50, ""));
+  const worst = scored.reduce((a, c) => c.eval.rm.score < a.eval.rm.score ? c : a, scored[0]);
+  gatesBox.appendChild(gate("Худший РК1 — " + (worst.code || worst.title) + " (нужно 25)",
+                            worst.eval.rm.score, 25, ""));
+}
+if (!gatesBox.children.length) {
+  /* Барьеры считать не по чему — но сами барьеры от этого никуда не делись,
+     поэтому показываем их как правила, а не пустое место. */
+  const box = el("div");
+  box.appendChild(el("div", null, "Считать пока нечего: оценок и посещаемости нет."));
+  const ul = el("div");
+  ul.style.cssText = "margin-top:8px;display:flex;flex-direction:column;gap:5px";
+  ["Посещаемость не ниже 70%",
+   "Не меньше 25 за каждую аттестацию",
+   "Среднее РК1 и РК2 не ниже 50 — иначе не допустят"].forEach(t => {
+    const r = el("div");
+    r.style.cssText = "display:flex;gap:7px;align-items:baseline";
+    const dot = el("i", "dot"); dot.style.background = "var(--ink-3)";
+    r.appendChild(dot); r.appendChild(el("span", null, t));
+    ul.appendChild(r);
+  });
+  box.appendChild(ul);
+  box.style.cssText = "font-size:12.5px;color:var(--ink-2)";
+  gatesBox.appendChild(box);
+}
 
 /* ── Задания ───────────────────────────────────────────────────────────── */
 const FILTERS = [
@@ -495,8 +552,10 @@ draw();
 
 /* ── Расписание ────────────────────────────────────────────────────────── */
 const dayBox = document.getElementById("day");
-document.getElementById("dayLbl").textContent = DATA.schedule.length + " пары";
-if (!DATA.schedule.length) dayBox.appendChild(el("div", "empty", "Сегодня пар нет."));
+document.getElementById("dayLbl").textContent =
+  DATA.schedule.length ? DATA.schedule.length + " пары" : "пар нет";
+if (!DATA.schedule.length)
+  dayBox.appendChild(el("div", "empty", "Расписание ещё не опубликовали."));
 let prevEnd = null;
 DATA.schedule.forEach(s => {
   if (prevEnd) {
@@ -517,16 +576,41 @@ DATA.schedule.forEach(s => {
 
 /* ── Курсы ─────────────────────────────────────────────────────────────── */
 const box = document.getElementById("courses");
+if (!DATA.courses.length) {
+  const empty = el("div", "card");
+  const body = el("div", "card-b", "Курсов пока нет. Они появятся здесь сами, как только "
+    + "их заведут в Moodle — проверка идёт раз в час, и тогда придёт сообщение в Telegram.");
+  body.style.color = "var(--ink-2)";
+  empty.appendChild(body);
+  box.appendChild(empty);
+}
 DATA.courses.forEach(c => {
   const e = c.eval;
   const card = el("div", "card");
 
   const h = el("div", "cr-h");
   const left = el("div");
-  left.appendChild(el("div", "code", c.code + " · " + c.credits + " кр."));
+  const meta = [c.code, c.credits ? c.credits + " кр." : null].filter(Boolean).join(" · ");
+  if (meta) left.appendChild(el("div", "code", meta));
   left.appendChild(el("h3", null, c.title));
-  left.appendChild(el("div", "who", c.teacher));
+  if (c.teacher) left.appendChild(el("div", "who", c.teacher));
   h.appendChild(left);
+
+  if (!e) {
+    /* Журнал Moodle на этом сервере закрыт для чтения, весов и баллов взять
+       негде. Рисовать нули нельзя — они выглядят как двойки. */
+    h.appendChild(el("span", "pill mute", "журнал закрыт"));
+    card.appendChild(h);
+    const n = (c.items || []).length;
+    const note = el("div", "card-b", n
+      ? n + " заданий со сроками. Баллы появятся, когда преподаватель начнёт их выставлять."
+      : "Заданий пока не выставили.");
+    note.style.cssText = "font-size:12.5px;color:var(--ink-2)";
+    card.appendChild(note);
+    box.appendChild(card);
+    return;
+  }
+
   /* Буква по набранному сейчас показывала бы FX всем подряд в середине
      триместра: несданное считается нулём. Поэтому статус словом, а рядом —
      потолок, то есть что выйдет, если сдать всё оставшееся хорошо. */

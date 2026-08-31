@@ -77,7 +77,7 @@ def _moodle_part(snap):
     except fast.Stale:
         pass                                  # ключи мертвы — ниже обновим браузером
 
-    with session.browser("lms", headless=True, lean=True) as ctx:
+    with session.connect("lms") as (ctx, _page):   # сперва попробует поднять молча
         client = moodle.Moodle(ctx)           # бросит MoodleError, если сессия мертва
         snap["sessions"]["lms"] = True        # сюда дошли — значит, сессия живая
         snap.setdefault("via", {})["lms"] = "браузер"
@@ -114,7 +114,7 @@ def _du_part(snap):
     except fast.Stale:
         pass
 
-    with session.browser("du", headless=True, lean=True) as ctx:
+    with session.connect("du") as (ctx, _page):
         client = du.DU(ctx)                   # бросит DUError, если токена нет
         snap["sessions"]["du"] = True
         snap.setdefault("via", {})["du"] = "браузер"
@@ -148,7 +148,7 @@ def snapshot():
     for name, part in (("lms", _moodle_part), ("du", _du_part)):
         try:
             part(snap)
-        except Exception as error:           # сеть, протухшая кука, изменившаяся вёрстка
+        except (Exception, SystemExit) as error:   # сеть, кука, вёрстка, требование войти руками
             # Не затираем True: до сессии мы дошли, упало что-то после неё.
             snap["sessions"].setdefault(name, False)
             snap.setdefault("errors", {})[name] = str(error)[:200]

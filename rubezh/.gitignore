@@ -5,3 +5,4 @@ state.json
 __pycache__/
 secrets.json
 watch.log
+localstorage.json

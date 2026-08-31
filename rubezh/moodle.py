@@ -24,7 +24,11 @@ class Moodle:
         cfg = self.page.evaluate(
             "() => window.M && M.cfg ? {sesskey: M.cfg.sesskey, userid: M.cfg.userId} : null"
         )
-        if not cfg or not cfg.get("sesskey"):
+        # sesskey Moodle выдаёт и гостю, так что сам по себе он ничего не значит.
+        # Признак входа — userId больше нуля. Раньше проверялся только sesskey, и
+        # разлогиненная сессия считалась живой: watch рапортовал «всё хорошо» и
+        # никогда не присылал «пора зайти руками».
+        if not cfg or not cfg.get("sesskey") or not (cfg.get("userid") or 0) > 0:
             raise MoodleError("Сессия Moodle не живая. Запусти: python rubezh.py login lms")
         self.sesskey = cfg["sesskey"]
         self.userid = cfg["userid"]

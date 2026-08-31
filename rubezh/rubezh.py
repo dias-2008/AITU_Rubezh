@@ -5,7 +5,7 @@
     python rubezh.py status           живы ли сессии
     python rubezh.py probe            что именно отдаёт Moodle этого универа
     python rubezh.py ics              постоянная ссылка на календарь Moodle
-    python rubezh.py build            собрать дашборд в build/dashboard.html
+    python rubezh.py build [--demo]   собрать дашборд (--demo — на выдуманных данных)
     python rubezh.py open             пересобрать и открыть в браузере
     python rubezh.py shortcut         положить ярлык на рабочий стол
     python rubezh.py serve [порт]     собрать и раздать (только этот компьютер)
@@ -70,9 +70,9 @@ def cmd_ics(_args):
     return 0
 
 
-def cmd_build(_args):
+def cmd_build(args):
     import web
-    print("Собрано:", web.build())
+    print("Собрано:", web.build(demo="--demo" in args))
     return 0
 
 
@@ -80,7 +80,7 @@ def cmd_open(_args):
     """Пересобрать дашборд свежими данными и открыть в браузере."""
     import webbrowser
     import web
-    out = web.build()
+    out = web.build(demo="--demo" in _args)
     webbrowser.open(out.resolve().as_uri())
     print("Открыл:", out)
     return 0
@@ -117,7 +117,8 @@ def cmd_shortcut(_args):
 def cmd_serve(args):
     import web
     ports = [a for a in args if a.isdigit()]
-    web.serve(int(ports[0]) if ports else 8000, lan="--lan" in args)
+    web.serve(int(ports[0]) if ports else 8000, lan="--lan" in args,
+              demo="--demo" in args)
     return 0
 
 
