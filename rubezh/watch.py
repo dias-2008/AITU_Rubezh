@@ -19,6 +19,7 @@ from pathlib import Path
 
 import du
 import fast
+import outlook
 import moodle
 import notify
 import session
@@ -40,6 +41,9 @@ def log(line):
 
 
 DEADLINE_LIMIT = 50      # Moodle отвечает ошибкой на limitnum больше 50
+
+# Что вообще должно собираться за прогон — чтобы в логе не было «5 из 4».
+EXPECTED = ("courses", "deadlines", "schedule", "transcript", "mail")
 
 
 def _gather(snap, key, fn):
@@ -140,12 +144,33 @@ def _du_part(snap):
         _gather(snap, "transcript", transcript)
 
 
-def snapshot():
-    """Текущее состояние обеих систем. Упавший источник помечаем, а не роняем всё."""
+def _mail_part(snap, old):
+    """Университетская почта.
+
+    Модель запускаем, ТОЛЬКО если появились новые письма: gemma4:e4b весит почти
+    десять гигабайт, и гонять её каждый час впустую — ровно та трата ресурсов,
+    которой мы избегали, уходя от запуска Chromium.
+    """
+    messages = outlook.fetch(limit=12, full=False)
+    snap["mail"] = [m["title"] for m in messages]
+    snap["collected"].append("mail")
+
+    known = set((old or {}).get("mail", []))
+    fresh = [m for m in messages if m["title"] not in known]
+    if fresh and known:            # на первом запуске не разбираем всю историю
+        snap["mail_findings"] = outlook.digest(fresh)
+    else:
+        snap["mail_findings"] = (old or {}).get("mail_findings", [])
+
+
+def snapshot(old=None):
+    """Текущее состояние систем. Упавший источник помечаем, а не роняем всё."""
     snap = {"at": datetime.now().isoformat(timespec="seconds"), "sessions": {},
             "collected": [], "courses": {}, "deadlines": {}, "schedule": None,
             "transcript": False, "group": None}
-    for name, part in (("lms", _moodle_part), ("du", _du_part)):
+    parts = (("lms", _moodle_part), ("du", _du_part),
+             ("outlook", lambda sn: _mail_part(sn, old)))
+    for name, part in parts:
         try:
             part(snap)
         except (Exception, SystemExit) as error:   # сеть, кука, вёрстка, требование войти руками
@@ -170,7 +195,7 @@ def compare(old, new):
     """Человеческие строки об изменениях. Пусто — значит ничего не поменялось."""
     lines, urgent = [], False
 
-    for name, title in (("lms", "Moodle"), ("du", "портал")):
+    for name, title in (("lms", "Moodle"), ("du", "портал"), ("outlook", "Outlook")):
         was = old.get("sessions", {}).get(name)
         now = new["sessions"].get(name)
         if was and not now:
@@ -215,6 +240,11 @@ def compare(old, new):
         elif was_sch and now_sch and was_sch != now_sch:
             lines.append(f"🗓 Расписание изменилось: было {was_sch}, стало {now_sch}")
 
+    for finding in new.get("mail_findings", []):
+        if finding not in (old.get("mail_findings") or []):
+            lines.append(f"📧 Из почты: {esc(finding)}")
+            urgent = True
+
     if both("transcript") and new.get("transcript") and not old.get("transcript"):
         lines.append("📊 Транскрипт открылся — появились оценки на портале")
 
@@ -235,7 +265,7 @@ def run(dry=False):
         except ValueError:
             pass
 
-    new = snapshot()
+    new = snapshot(old)
     lines, urgent = compare(old, new)
 
     # Самый первый запуск: сравнивать не с чем, поэтому не сыплем «новый дедлайн»
@@ -249,7 +279,7 @@ def run(dry=False):
 
     via = ",".join(f"{k}:{v}" for k, v in sorted((new.get("via") or {}).items())) or "—"
     errs = ("; ошибки: " + ", ".join(new.get("errors", {}))) if new.get("errors") else ""
-    log(f"через {via}; собрано {len(new['collected'])}/4; изменений {len(lines)}{errs}")
+    log(f"через {via}; собрано {len(new['collected'])}/{len(EXPECTED)}; изменений {len(lines)}{errs}")
 
     if not lines:
         print(f"Изменений нет ({new['at']}).")

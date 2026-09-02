@@ -36,6 +36,8 @@ def cmd_status(_args):
     for name, spec in session.SERVICES.items():
         alive = session.is_logged_in(name) if session.profile_dir(name).exists() else False
         mark = "вошёл" if alive else "нет сессии"
+        if spec.get("unused"):
+            mark += " — не используется, данные отсюда не читаются"
         print(f"  [{'✓' if alive else ' '}] {name:<9} {spec['title']:<12} {mark}")
     return 0
 
@@ -105,15 +107,22 @@ def cmd_protocol(args):
 
     # Сервис берём только из известного списка. Ссылку может подсунуть кто
     # угодно — в запуск не должно попасть ничего, кроме заранее известных имён.
-    service = parts[1]
-    if service not in session.SERVICES:
-        raise SystemExit(f"Неизвестный сервис: {service[:40]}")
+    target = parts[1]
+    if target == "all":
+        # Дашборду нужны оба источника. Логинимся подряд в одном запуске, чтобы
+        # пересборка была одна на все входы, а не своя после каждого.
+        services = [s for s in ("lms", "du") if not session.is_logged_in(s)]
+    elif target in session.SERVICES:
+        services = [target]
+    else:
+        raise SystemExit(f"Неизвестный сервис: {target[:40]}")
 
-    ok = session.login(service)
+    ok = all(session.login(service) for service in services) if services else True
     if ok:
-        import webbrowser
         import web
-        webbrowser.open(web.build().resolve().as_uri())
+        web.build()
+        # Вкладку намеренно НЕ открываем: страница, с которой пришёл клик, сама
+        # перечитает файл. Иначе на каждый вход копится по новой вкладке.
     return 0 if ok else 1
 
 

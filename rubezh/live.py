@@ -9,7 +9,9 @@ AITU закрыт для ajax — см. `rubezh.py probe`. Значит, **ве�
 Что настоящее уже сейчас: список курсов, дедлайны из календаря Moodle, расписание
 группы с портала и академический календарь.
 """
+import json
 from datetime import date, datetime
+from pathlib import Path
 
 import aitu
 import fast
@@ -175,8 +177,18 @@ def gather(today=None):
     notes.append("Оценки и посещаемость недоступны: журнал Moodle на этом сервере "
                  "закрыт для чтения. Появятся, когда преподаватели начнут выставлять баллы.")
 
+    # Находки из почты считает watch (раз в час и только при новых письмах),
+    # здесь их только читаем: сборка дашборда не должна поднимать модель.
+    mail = []
+    try:
+        state = json.loads((Path(__file__).parent / "state.json").read_text(encoding="utf-8"))
+        mail = state.get("mail_findings") or []
+    except (OSError, ValueError):
+        pass
+
     return {
         "demo": False,
+        "mail": mail,
         "student": student,
         "group": group or "",
         "term": aitu.current_term(today)["name"],
