@@ -16,7 +16,10 @@
     python rubezh.py watch [--dry]    проверить изменения и написать в Telegram
 """
 import json
+import os
 import sys
+import time
+from contextlib import contextmanager
 from pathlib import Path
 
 NL = chr(10)
@@ -24,6 +27,48 @@ NL = chr(10)
 import session
 
 SECRETS = Path(__file__).parent / "secrets.json"
+LOCK = Path(__file__).parent / ".sessions" / "protocol.lock"
+LOCK_STALE_SEC = 15 * 60          # заведомо дольше окна входа (10 минут)
+
+
+def _log(line):
+    """Одна строка в watch.log — туда же, куда пишет фоновая проверка."""
+    log = Path(__file__).parent / "watch.log"
+    try:
+        with log.open("a", encoding="utf-8") as handle:
+            handle.write(f"{time.strftime('%Y-%m-%d %H:%M')}  вход: {line}{NL}")
+    except OSError:
+        pass                      # лог не повод ронять вход
+
+
+@contextmanager
+def _single_run():
+    """Один вход за раз: `True` — можно работать, `False` — уже идёт другой.
+
+    Клик по «Войти» ничем себя не проявляет: обработчик запускается под
+    pythonw, а Python с Playwright и холодным Chromium стартуют секунд
+    двадцать. Человек, естественно, жмёт ещё раз — и второй процесс лезет в тот
+    же профиль Chromium, где уже сидит первый. Профиль они делят плохо, и не
+    выигрывает никто: окно то не открывается, то открывается втроём.
+    """
+    LOCK.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        if time.time() - LOCK.stat().st_mtime > LOCK_STALE_SEC:
+            LOCK.unlink()         # прошлый запуск умер, не убрав за собой
+    except OSError:
+        pass                      # файла нет — так и должно быть
+    try:
+        os.close(os.open(str(LOCK), os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+    except OSError:
+        yield False
+        return
+    try:
+        yield True
+    finally:
+        try:
+            LOCK.unlink()
+        except OSError:
+            pass
 
 
 def cmd_login(args):
@@ -111,18 +156,28 @@ def cmd_protocol(args):
     if target == "all":
         # Дашборду нужны оба источника. Логинимся подряд в одном запуске, чтобы
         # пересборка была одна на все входы, а не своя после каждого.
-        services = [s for s in ("lms", "du") if not session.is_logged_in(s)]
+        import fast
+        services = [s for s in ("lms", "du") if not fast.alive(s)]
     elif target in session.SERVICES:
         services = [target]
     else:
         raise SystemExit(f"Неизвестный сервис: {target[:40]}")
 
-    ok = all(session.login(service) for service in services) if services else True
-    if ok:
-        import web
-        web.build()
-        # Вкладку намеренно НЕ открываем: страница, с которой пришёл клик, сама
-        # перечитает файл. Иначе на каждый вход копится по новой вкладке.
+    with _single_run() as first:
+        if not first:
+            return 0            # уже открываем окно входа, второе тут лишнее
+        try:
+            ok = all(session.login(s) for s in services) if services else True
+            if ok:
+                import web
+                web.build()
+                # Вкладку намеренно НЕ открываем: страница, с которой пришёл
+                # клик, сама перечитает файл. Иначе копится по новой вкладке.
+        except BaseException as error:
+            # Обработчик работает под pythonw: без файла падение не видно вообще
+            # ниоткуда, а с дашборда это выглядит как «кнопка не работает».
+            _log(f"{url[:60]} — {type(error).__name__}: {str(error)[:200]}")
+            raise
     return 0 if ok else 1
 
 

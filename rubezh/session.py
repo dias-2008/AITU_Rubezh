@@ -20,6 +20,7 @@
    нет. Так что Moodle можно молча переподнять: сходить на /auth/oidc/,
    Microsoft узнает нас и вернёт назад уже залогиненными. Человека не дёргаем.
 """
+import base64
 import json
 import sys
 import time
@@ -27,6 +28,8 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
+
+import fast
 
 ROOT = Path(__file__).parent
 PROFILES = ROOT / ".sessions"
@@ -122,23 +125,55 @@ def _outlook_revive(page):
     return _outlook_ready(page)
 
 
+def _jwt_alive(token, skew=60):
+    """Не истёк ли JWT. Подпись не проверяем — она забота сервера, а не наша:
+    вопрос здесь ровно один, дёргать человека входить или нет."""
+    if not token:
+        return False
+    try:
+        body = token.split(".")[1]
+        body += "=" * (-len(body) % 4)
+        expires = json.loads(base64.urlsafe_b64decode(body)).get("exp")
+    except Exception:
+        return True           # не разобрали — пусть решает сервер, а не догадка
+    return not expires or time.time() < expires - skew
+
+
+def _du_token(page):
+    try:
+        return page.evaluate("() => window.localStorage.getItem('token')")
+    except Exception:
+        return None           # страница в этот момент переходила — не мешаем
+
+
 def _du_ready(page):
-    """Признак входа на портал — JWT в localStorage.
+    """Признак входа на портал — ЖИВОЙ JWT в localStorage.
 
     Раньше здесь считались символы в теле страницы: «текста много и кнопки входа
     не видно — значит вошли». Признак косвенный и срабатывал раньше времени —
     на полуотрисованной странице, когда токена ещё нет. Из-за этого вход
     считался успешным, а сохранять было нечего, и сессия не переживала перезапуск.
 
-    Токен — это и есть сессия: если он есть, мы точно внутри, и ровно его надо
-    сохранить. Положительный признак вместо отсутствия отрицательного.
+    Но и «ключ token существует» проверять нельзя: сохранённый localStorage мы
+    сами подкладываем на каждую страницу (`_restore_storage`), и проверка
+    начинала видеть собственную подкладку. Истёкший токен выглядел как рабочая
+    сессия: окно входа закрывалось раньше, чем человек успевал войти, а сохранять
+    опять было нечего. Поэтому смотрим на срок годности — его мы не подделываем.
     """
     if "du.astanait.edu.kz" not in page.url:
         return False
-    try:
-        return bool(page.evaluate("() => window.localStorage.getItem('token')"))
-    except Exception:
-        return False          # страница в этот момент переходила — не мешаем
+    return _jwt_alive(_du_token(page))
+
+
+def _lms_keys(page):
+    """Ключ быстрого пути Moodle — sesskey живой страницы."""
+    key = page.evaluate("() => (window.M && M.cfg) ? M.cfg.sesskey : null")
+    return {"moodle_sesskey": key} if key else {}
+
+
+def _du_keys(page):
+    token = _du_token(page)
+    return {"du_token": token} if token else {}
 
 
 def _du_revive(page):
@@ -157,6 +192,7 @@ SERVICES = {
         "ready_url": f"{LMS}/my/",
         "ready": _lms_ready,
         "revive": _lms_revive,
+        "keys": _lms_keys,
         "hint": "Жми «Log in with OpenID Connect» и заходи университетским аккаунтом.",
     },
     "outlook": {
@@ -173,6 +209,7 @@ SERVICES = {
         "ready_url": "https://du.astanait.edu.kz/",
         "ready": _du_ready,
         "revive": _du_revive,
+        "keys": _du_keys,
         "hint": "Жми «Sign in with corporate E-mail» — аккаунт тот же.",
     },
 }
@@ -243,16 +280,49 @@ def _restore_storage(service, context):
     if not path.exists():
         return
     try:
-        raw = path.read_text(encoding="utf-8")
-        json.loads(raw)                     # мусор в init-script не отправляем
+        data = json.loads(path.read_text(encoding="utf-8"))
     except (ValueError, OSError):
+        return                              # мусор в init-script не отправляем
+    # Истёкший токен не подкладываем вовсе. Работать он не будет, зато выглядит
+    # как живая сессия для любой проверки, которая просто ищет ключ, — а
+    # подкладываем и проверяем мы сами, замкнутый круг.
+    if "token" in data and not _jwt_alive(data.get("token")):
+        data.pop("token")
+    if not data:
         return
+    raw = json.dumps(data)
     # Не затираем то, что уже есть: свежее значение всегда важнее сохранённого.
     context.add_init_script(
         "(() => { try { const d = " + raw + ";"
         " for (const k in d) if (localStorage.getItem(k) === null)"
         " localStorage.setItem(k, d[k]); } catch (e) {} })()"
     )
+
+
+def _capture(service, context, page):
+    """Всё, что нужно запомнить о живой сессии, — в одном месте.
+
+    Куки, localStorage и ключи быстрого пути снимаются вместе и только тогда,
+    когда сессия точно жива. Раньше ключи (sesskey Moodle и JWT портала)
+    обновлял один только `watch.snapshot()`: человек входил руками, ключи в
+    secrets.json оставались вчерашними, дашборд собирался по ним и снова писал
+    «войди» — сразу после успешного входа. Сессия и ключи к ней — одно и то же
+    событие, и сохраняться должны одним движением.
+    """
+    try:
+        _save_cookies(service, context)
+    except Exception:
+        pass
+    _save_storage(service, page)
+    getter = SERVICES[service].get("keys")
+    if not getter:
+        return
+    try:
+        values = getter(page)
+    except Exception:
+        return                  # страница переходила — ключ возьмём в другой раз
+    if values:
+        fast.remember(**values)
 
 
 # Что не нужно фоновой проверке: она читает данные, а не смотрит на страницу.
@@ -320,7 +390,9 @@ def connect(service):
         page = context.new_page()
         page.goto(spec["ready_url"], wait_until="domcontentloaded", timeout=60000)
 
-        if not spec["ready"](page):
+        if spec["ready"](page):
+            _capture(service, context, page)   # ключи под рукой — забираем сразу
+        else:
             print(f"Сессия {spec['title']} протухла, поднимаю заново...", file=sys.stderr)
             try:
                 revived = spec["revive"](page)
@@ -334,8 +406,7 @@ def connect(service):
                 raise SystemExit(
                     f"Не смог войти сам. Запусти: python rubezh.py login {service}"
                 )
-            _save_cookies(service, context)
-            _save_storage(service, page)
+            _capture(service, context, page)
             print("Готово, вошёл без тебя.", file=sys.stderr)
 
         yield context, page
@@ -351,16 +422,28 @@ def is_logged_in(service):
             page = context.new_page()
             page.goto(spec["ready_url"], wait_until="domcontentloaded", timeout=60000)
             if spec["ready"](page):
+                _capture(service, context, page)
                 return True
             if spec["revive"](page):
-                _save_cookies(service, context)
-                _save_storage(service, page)
+                _capture(service, context, page)
                 return True
             return False
     except NeedsHuman:
         return False
     except Exception:
         return False
+
+
+def refresh(service):
+    """Обновить ключи быстрого пути браузером — точечно, для одного сервиса.
+
+    Раньше за этим ходили в `watch.snapshot()`: он обходит оба источника и почту
+    и при новых письмах поднимает локальную модель на девять с лишним гигабайт —
+    всё это ради одной строки в secrets.json. Плюс его неудача на портале
+    считалась неудачей и для Moodle: флаг «уже пробовали» был один на оба.
+    """
+    with connect(service):
+        return True             # ключи снял сам connect, ему для этого хватило
 
 
 def login(service):
@@ -393,8 +476,7 @@ def login(service):
             for candidate in alive:
                 try:
                     if spec["ready"](candidate):
-                        _save_cookies(service, context)
-                        _save_storage(service, candidate)
+                        _capture(service, context, candidate)
                         print(f"Готово, сессия {spec['title']} сохранена.")
                         return True
                 except Exception:

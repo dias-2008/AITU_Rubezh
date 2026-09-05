@@ -15,27 +15,35 @@ from pathlib import Path
 
 import aitu
 import fast
-import watch
+import session
 
 COURSES_FN = "core_course_get_enrolled_courses_by_timeline_classification"
 EVENTS_FN = "core_calendar_get_action_events_by_timesort"
 
 
-_refreshed = False
+_refreshed = set()
 
 
-def _refresh_keys():
-    """Поднять браузер и обновить ключи — но ровно один раз за запуск.
+def _refresh_keys(service):
+    """Поднять браузер и обновить ключи сервиса — ровно один раз за запуск.
 
-    Иначе каждый из четырёх вызовов ловит Stale и заново поднимает Chromium с
-    попыткой молчаливого входа. При мёртвой сессии это пять браузеров подряд и
+    Иначе каждый вызов ловит Stale и заново поднимает Chromium с попыткой
+    молчаливого входа. При мёртвой сессии это несколько браузеров подряд и
     минуты ожидания там, где ответ известен после первой попытки.
+
+    Счёт попыток — по сервисам, а не один на всех: мёртвый портал не повод
+    считать, что за ключом Moodle уже сходили.
     """
-    global _refreshed
-    if _refreshed:
-        raise fast.Stale("ключи уже пробовали обновить в этом запуске")
-    _refreshed = True
-    watch.snapshot()              # положит свежие ключи в secrets.json
+    if service in _refreshed:
+        raise fast.Stale(f"ключи {service} уже пробовали обновить в этом запуске")
+    _refreshed.add(service)
+    try:
+        session.refresh(service)
+    except (Exception, SystemExit) as error:
+        # SystemExit — это «зайди руками» из session.connect. Для сборки это
+        # обычный отказ источника, а не повод уронить дашборд: он обязан
+        # открываться и с протухшей сессией.
+        raise fast.Stale(f"ключи {service} обновить не вышло: {str(error)[:120]}")
 
 
 def _moodle(method, args):
@@ -43,7 +51,7 @@ def _moodle(method, args):
     try:
         return fast.moodle_call(method, args)
     except fast.Stale:
-        _refresh_keys()
+        _refresh_keys("lms")
         return fast.moodle_call(method, args)
 
 
@@ -51,7 +59,7 @@ def _du(path):
     try:
         return fast.du_get(path)
     except fast.Stale:
-        _refresh_keys()
+        _refresh_keys("du")
         return fast.du_get(path)
 
 
@@ -134,7 +142,11 @@ def _student_info():
         if isinstance(value, str) and value.strip():
             name = value.strip().split()[0]
             break
+    # Группа приходит объектом {"id": 863, "title": "CS-2606"}, а не строкой.
+    # Строку тоже принимаем: портал уже менял форму этого поля один раз.
     group = student.get("group")
+    if isinstance(group, dict):
+        group = group.get("title") or group.get("name")
     return name, (group.strip() if isinstance(group, str) and group.strip() else None)
 
 
@@ -155,16 +167,23 @@ def gather(today=None):
     if group:
         fast.remember(du_group=group)
 
+    # «Войди руками» пишем только на отказ авторизации (Stale). Упавшая сеть или
+    # лежащий сервер — не повод гнать человека логиниться: он войдёт, ничего не
+    # изменится, и полоса «сессия истекла» останется висеть как обвинение.
     try:
         courses = _courses()
         loose = _attach_deadlines(courses, today)
-    except Exception:
+    except fast.Stale:
         needs.append("lms")
+    except Exception as error:
+        notes.append(f"Moodle сейчас не отвечает: {str(error)[:120]}")
 
     try:
         schedule = _schedule(group)
-    except Exception:
+    except fast.Stale:
         needs.append("du")
+    except Exception as error:
+        notes.append(f"Портал сейчас не отвечает: {str(error)[:120]}")
 
     # Честно объясняем пустоту, вместо того чтобы показывать пустой экран молча.
     if not needs:

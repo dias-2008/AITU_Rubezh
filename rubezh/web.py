@@ -16,6 +16,7 @@
 сканированием за секунды.
 """
 import json
+import os
 import secrets
 import socket
 from datetime import datetime
@@ -98,10 +99,15 @@ def build(demo=False):
     head, found, rest = fragment(demo=demo).partition(marker)
     if not found:
         raise SystemExit(f"В шаблоне нет {marker} — не понять, где кончается head.")
-    out.write_text(
+    # Пишем через временный файл: пока идёт вход, открытая вкладка перечитывает
+    # dashboard.html каждые двадцать секунд и вполне может попасть в середину
+    # записи — и показать обрубок вместо страницы. Замена файла целиком атомарна.
+    tmp = out.with_suffix(".html.tmp")
+    tmp.write_text(
         DOCTYPE + head + "</head>\n<body>\n" + marker + rest + "\n</body>\n</html>\n",
         encoding="utf-8",
     )
+    os.replace(tmp, out)
     return out
 
 

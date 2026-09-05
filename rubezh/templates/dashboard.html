@@ -207,6 +207,11 @@ tbody tr:hover{background:var(--surface-2)}
      white-space:nowrap}
 .btn:hover{filter:brightness(1.08)}
 .btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+/* Окно входа появляется не мгновенно — кнопка обязана сказать об этом сама,
+   иначе клик выглядит как «ничего не произошло» и человек жмёт ещё раз. */
+.btn.waiting{pointer-events:none;opacity:.75}
+.btn.waiting svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 .demo{display:flex;align-items:center;gap:8px;padding:8px 13px;border-radius:var(--r);
       background:var(--warn-soft);color:var(--warn);font-size:12.5px;font-weight:500}
 
@@ -371,18 +376,50 @@ if (need.length) {
     (need.length > 1 ? "Сессии " : "Сессия ") + names +
     (need.length > 1 ? " истекли" : " истекла") + " — данные не обновятся, пока не войдёшь."));
   const hint = el("small");
-  hint.textContent = "Откроется " + (need.length > 1 ? "по окну на каждый вход" : "окно входа")
+  const hintText = "Откроется " + (need.length > 1 ? "по окну на каждый вход" : "окно входа")
     + ", дальше страница обновится сама. Не сработало? Выполни: "
     + need.map(s => "python rubezh.py login " + s).join(" · ");
+  hint.textContent = hintText;
   txt.appendChild(hint);
   box.appendChild(txt);
   const btn = el("a", "btn");
   btn.href = "rubezh://login/" + (need.length > 1 ? "all" : encodeURIComponent(need[0]));
   btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>'
     + '<path d="M10 17l5-5-5-5M15 12H3"/></svg>';
-  btn.appendChild(document.createTextNode("Войти"));
+  const label = document.createTextNode("Войти");
+  btn.appendChild(label);
   box.appendChild(btn);
   document.getElementById("demoBanner").appendChild(box);
+
+  /* Между кликом и окном входа проходит секунд двадцать: запускается Python,
+     Playwright и холодный Chromium, и всё это молча — обработчик работает без
+     консоли. Пока страница не скажет, что клик принят, человек будет жать
+     ещё и ещё, а каждый лишний запуск лезет в тот же профиль браузера.
+
+     Метку кладём в хранилище, а не в переменную: страница сама перезагружается
+     раз в двадцать секунд, и без неё кнопка через секунду снова выглядит
+     нетронутой — ровно приглашение нажать второй раз. */
+  const WAIT_MS = 90000, MARK = "rubezh-login-click";
+  const mark = (value) => { try { sessionStorage.setItem(MARK, value); } catch (e) {} };
+  const marked = () => { try { return +sessionStorage.getItem(MARK) || 0; } catch (e) { return 0; } };
+
+  let idle = null;
+  function waiting() {
+    btn.classList.add("waiting");
+    label.textContent = "Открываю окно входа…";
+    hint.textContent = "Chromium стартует секунд двадцать. Окно откроется само — "
+      + "жать ещё раз не нужно.";
+    clearTimeout(idle);
+    idle = setTimeout(() => {          // не открылось — пусть можно будет повторить
+      btn.classList.remove("waiting");
+      label.textContent = "Войти";
+      hint.textContent = hintText;
+      mark(0);
+    }, Math.max(1000, marked() + WAIT_MS - Date.now()));
+  }
+
+  btn.addEventListener("click", () => { mark(Date.now()); waiting(); });
+  if (Date.now() - marked() < WAIT_MS) waiting();
 
   /* Пересборка не может достучаться до открытой вкладки, поэтому вкладка сама
      перечитывает файл — так после входа не появляется ещё одна. Только пока

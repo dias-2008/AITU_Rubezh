@@ -135,6 +135,29 @@ def du_get(path):
         raise Stale("вместо JSON пришла страница")
 
 
+def alive(service):
+    """Годятся ли ключи прямо сейчас — по HTTP, без Chromium.
+
+    Нужно там, где решается, показывать человеку окно входа или нет. Раньше это
+    решалось через `session.is_logged_in`, а он поднимает браузер на каждый
+    сервис: до появления окна проходила минута, в которую с дашборда не видно
+    ровно ничего. Тот же вопрос и тот же ответ здесь стоят секунду.
+    """
+    try:
+        if service == "lms":
+            moodle_call("core_calendar_get_action_events_by_timesort", {"limitnum": 1})
+        elif service == "du":
+            du_get("/astanait-student-module/api/v1/student/profile/principal")
+        else:
+            return False
+        return True
+    except Stale:
+        return False
+    except Exception:
+        # Сеть или сам сервер — вход тут не поможет, окно открывать незачем.
+        return True
+
+
 def du_snapshot(group):
     if not group:
         raise Stale("группа неизвестна")
