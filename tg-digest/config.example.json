@@ -1,17 +1,21 @@
 {
   "backend": "auto",
-
   "claude_model": "sonnet",
   "gemini_cli_model": "gemini-2.5-flash",
-  "ollama_model": "qwen2.5:7b-instruct",
+  "ollama_model": "gemma4:e4b",
   "gemini_model": "gemini-2.5-flash",
-
   "max_messages_per_chat": 500,
   "max_chars_per_message": 600,
   "max_requests_per_run": 20,
-
   "chats": [
-    { "id": -1001234567890, "title": "SE-2401 объявления" },
-    { "id": -1009876543210, "title": "Матанализ" }
-  ]
+    {
+      "id": -1001234567890,
+      "title": "SE-2401 объявления"
+    },
+    {
+      "id": -1009876543210,
+      "title": "Матанализ"
+    }
+  ],
+  "ollama_num_ctx": 16384
 }

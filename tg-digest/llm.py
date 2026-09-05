@@ -39,6 +39,27 @@ GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model
 PREFERENCE = ["claude-cli", "gemini-api", "ollama", "gemini-cli"]
 
 
+def load_env(required=True):
+    """Простой .env-ридер, чтобы не тащить python-dotenv.
+
+    Живёт здесь, а не в digest.py: `python llm.py --check` тоже должен видеть ключи,
+    иначе он врёт, что gemini-api недоступен.
+    """
+    env = ROOT / ".env"
+    if not env.exists():
+        if required:
+            raise SystemExit("Нет файла .env — скопируй .env.example в .env и заполни.")
+        return False
+    for line in env.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            key, value = line.split("=", 1)
+            value = value.strip().strip('"').strip("'")
+            if value:
+                os.environ.setdefault(key.strip(), value)
+    return True
+
+
 def log_usage(line):
     """Чек за каждый вызов модели — чтобы всегда было видно, куда ушла квота."""
     with USAGE_LOG.open("a", encoding="utf-8") as handle:
@@ -119,11 +140,15 @@ def _ollama_ok():
 
 
 def _ollama(instruction, messages, cfg):
-    model = cfg.get("ollama_model", "qwen2.5:7b-instruct")
+    model = cfg.get("ollama_model", "gemma4:e4b")
+    # num_ctx ОБЯЗАТЕЛЕН: по умолчанию Ollama берёт ~4k токенов и молча режет вход.
+    # Пачка на 460 сообщений — это ~13k токенов, без этого модель увидит огрызок.
+    num_ctx = cfg.get("ollama_num_ctx", 16384)
     response = requests.post(
         f"{OLLAMA_URL}/api/chat",
         json={
-            "model": model, "stream": False, "options": {"temperature": 0.2},
+            "model": model, "stream": False,
+            "options": {"temperature": 0.2, "num_ctx": num_ctx},
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": f"{instruction}\n\n{messages}"},
@@ -260,6 +285,7 @@ if __name__ == "__main__":
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
         sys.stderr.reconfigure(encoding="utf-8")  # сюда пишет автопереход между провайдерами
+    load_env(required=False)
     config = {}
     config_path = ROOT / "config.json"
     if config_path.exists():
