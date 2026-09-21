@@ -22,7 +22,17 @@ from pathlib import Path
 
 import requests
 
-ROOT = Path(__file__).parent
+# Из исходников всё лежит рядом со скриптами. Из установщика (PyInstaller) exe
+# лежат в корне папки установки, а данные — в подпапке tg-digest/ рядом, как в
+# репозитории; файлы из сборки (config.example.json) — внутри _internal.
+FROZEN = bool(getattr(sys, "frozen", False))
+if FROZEN:
+    ROOT = Path(sys.executable).resolve().parent / "tg-digest"
+    ASSETS = Path(getattr(sys, "_MEIPASS", ROOT)) / "tg-digest"
+    ROOT.mkdir(parents=True, exist_ok=True)
+else:
+    ROOT = Path(__file__).parent
+    ASSETS = ROOT
 USAGE_LOG = ROOT / "usage.log"
 
 SYSTEM_PROMPT = (
@@ -37,6 +47,12 @@ GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model
 # бесплатный тир Code Assist для физлиц (IneligibleTierError / UNSUPPORTED_CLIENT),
 # так что установленный бинарник ещё не значит рабочий провайдер.
 PREFERENCE = ["claude-cli", "gemini-api", "ollama", "gemini-cli"]
+
+
+def set_usage_log(path):
+    """Свой чек расходов на каждый профиль."""
+    global USAGE_LOG
+    USAGE_LOG = Path(path)
 
 
 def load_env(required=True):
@@ -72,10 +88,17 @@ def log_usage(line):
 CMD_UNSAFE = re.compile(r"[&|<>^%]")
 
 
+# Из планировщика нас запускает pythonw без консоли, и Windows заводит новое окно
+# под каждый дочерний claude/gemini — раз в час мигает терминал. CREATE_NO_WINDOW
+# даёт ребёнку скрытую консоль; вывод мы всё равно забираем через pipe.
+NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+
+
 def _run_cli(binary, args, stdin_text, label):
     result = subprocess.run(
         [binary, *args], input=stdin_text, capture_output=True,
         text=True, encoding="utf-8", errors="replace", timeout=900,
+        creationflags=NO_WINDOW,
     )
     if result.returncode != 0:
         raise RuntimeError(f"{label}: код {result.returncode}. {(result.stderr or '').strip()[:500]}")

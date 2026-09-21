@@ -37,19 +37,53 @@
 
 ## С чего начать
 
+### Windows — установщик
+
+Скачай `AITU-Rubezh-Setup-<версия>.exe` из [Releases](https://github.com/dias-2008/AITU_Rubezh/releases),
+запусти, дальше «Далее → Далее → Готово». Python, Chromium и всё остальное внутри
+(~190 МБ), ничего доустанавливать не надо, права администратора не нужны.
+
+На последнем экране установщик предлагает запустить мастер: он откроет окно входа в
+Moodle, потом в портал, спросит про Telegram — и соберёт дашборд. Минут пять.
+
+> **Windows напишет «Windows защитила ваш компьютер».** Установщик не подписан
+> (сертификат стоит денег), поэтому SmartScreen предупреждает о любом новом файле.
+> Нажми «Подробнее» → «Выполнить в любом случае». Что внутри — можно проверить:
+> установщик собирается из этого репозитория на GitHub Actions, см.
+> [.github/workflows/release.yml](.github/workflows/release.yml).
+
+Ярлык на рабочем столе открывает дашборд. Удаление — как у любой программы,
+через «Приложения»; при удалении спросит, стирать ли сессии и ключи.
+
+### macOS
+
+Установщика нет, но всё работает из исходников — одной командой:
+
 ```
 git clone https://github.com/dias-2008/AITU_Rubezh.git
-cd AITU_Rubezh/rubezh
-pip install -r requirements.txt
-python -m playwright install chromium
-
-python rubezh.py login lms       вход в Moodle, один раз
-python rubezh.py login du        вход в портал
-python rubezh.py build           собрать дашборд
+cd AITU_Rubezh && sh install.sh
 ```
+
+Нужен Python 3.11+ (`brew install python`). Скрипт ставит зависимости в `.venv`,
+скачивает Chromium и запускает тот же мастер. Ярлык на рабочем столе — файл
+`.command`, проверка раз в час — агент launchd. **Проверено пока только на
+Windows:** macOS-ветка написана по документации, если что-то не так — открой issue.
+
+### Из исходников на Windows
+
+```
+git clone https://github.com/dias-2008/AITU_Rubezh.git
+cd AITU_Rubezh
+install.bat
+```
+
+Или руками: `pip install -r rubezh/requirements.txt`, `python -m playwright install chromium`,
+`cd rubezh`, `python rubezh.py setup`.
 
 Дальше — [rubezh/README.md](rubezh/README.md): там про уведомления в Telegram, фоновую
 проверку раз в час и про то, почему всё ходит через браузер, а не через API.
+Второй инструмент, [tg-digest](tg-digest), настраивается отдельно: `python digest.py setup`
+(в установщике — галочка «tg-digest» и ярлык «Настройка tg-digest» в меню Пуск).
 
 ## Безопасность
 

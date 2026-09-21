@@ -27,11 +27,12 @@ import time
 from contextlib import contextmanager
 from pathlib import Path
 
+import paths                      # до playwright: путь к Chromium
 from playwright.sync_api import sync_playwright
 
 import fast
 
-ROOT = Path(__file__).parent
+ROOT = paths.ROOT
 PROFILES = ROOT / ".sessions"
 
 # Ждём столько, пока студент логинится руками (SSO, 2FA, подтверждение на телефоне).
@@ -275,7 +276,16 @@ def _save_storage(service, page):
 
 
 def _restore_storage(service, context):
-    """Подложить localStorage до того, как на странице запустятся свои скрипты."""
+    """Подложить localStorage до того, как на странице запустятся свои скрипты.
+
+    Ровно один раз на вкладку. `add_init_script` выполняется на КАЖДОМ
+    документе, и подкладка возвращала ровно то, что страница только что
+    осознанно стёрла: портал разлогинивался и уходил на /login, мы клали ключи
+    обратно, он снова считал себя вошедшим и уходил на /, не находил рабочего
+    токена — и опять на /login. Замеряно: 21 переход за 25 секунд, окно входа
+    моргает и войти физически невозможно. Метка в sessionStorage переживает
+    перезагрузки внутри вкладки, но не саму вкладку: подложили — и молчим.
+    """
     path = _storage_file(service)
     if not path.exists():
         return
@@ -283,17 +293,19 @@ def _restore_storage(service, context):
         data = json.loads(path.read_text(encoding="utf-8"))
     except (ValueError, OSError):
         return                              # мусор в init-script не отправляем
-    # Истёкший токен не подкладываем вовсе. Работать он не будет, зато выглядит
-    # как живая сессия для любой проверки, которая просто ищет ключ, — а
-    # подкладываем и проверяем мы сами, замкнутый круг.
-    if "token" in data and not _jwt_alive(data.get("token")):
-        data.pop("token")
+    # Мёртвый токен тянет за собой весь остаток сессии: ключ `user` без токена
+    # только вводит портал в заблуждение. Восстанавливаем сессию целиком — или
+    # никак, пусть страница считает, что мы тут впервые.
+    if "token" in data and not _jwt_alive(data["token"]):
+        return
     if not data:
         return
-    raw = json.dumps(data)
     # Не затираем то, что уже есть: свежее значение всегда важнее сохранённого.
     context.add_init_script(
-        "(() => { try { const d = " + raw + ";"
+        "(() => { try {"
+        " if (sessionStorage.getItem('__rubezh_restored')) return;"
+        " sessionStorage.setItem('__rubezh_restored', '1');"
+        " const d = " + json.dumps(data) + ";"
         " for (const k in d) if (localStorage.getItem(k) === null)"
         " localStorage.setItem(k, d[k]); } catch (e) {} })()"
     )
@@ -343,12 +355,16 @@ LEAN_BLOCKED = {"image", "media", "font"}
 
 
 @contextmanager
-def browser(service, headless=True, lean=False):
+def browser(service, headless=True, lean=False, storage=True):
     """Профиль сервиса как контекст Playwright, с подложенными куками.
 
     lean=True — режим фоновой проверки: не грузим картинки, шрифты и медиа и
     просим Chromium не заниматься ничем лишним. Данные от этого не меняются,
     а трафика и памяти уходит заметно меньше.
+
+    storage=False — не подкладывать сохранённый localStorage. Так заходит
+    человек руками: он пришёл сделать новую сессию, и старая может ему только
+    помешать — ровно этим порталу и сносило крышу на экране входа.
     """
     if service not in SERVICES:
         raise SystemExit(f"Неизвестный сервис {service!r}. Есть: {', '.join(SERVICES)}")
@@ -358,9 +374,13 @@ def browser(service, headless=True, lean=False):
     if lean:
         args += LEAN_ARGS
     with sync_playwright() as pw:
+        # channel="chromium" — полный Chromium и в headless-режиме (новый headless),
+        # а не отдельная урезанная сборка chromium_headless_shell. Один браузер на
+        # оба режима: в установщике это минус ~270 МБ, и он менее похож на бота.
         context = pw.chromium.launch_persistent_context(
             str(path),
             headless=headless,
+            channel="chromium",
             viewport={"width": 1280, "height": 900},
             args=args,
         )
@@ -371,7 +391,8 @@ def browser(service, headless=True, lean=False):
                 if route.request.resource_type in LEAN_BLOCKED else route.continue_(),
             )
         _restore_cookies(service, context)
-        _restore_storage(service, context)
+        if storage:
+            _restore_storage(service, context)
         try:
             yield context
         finally:
@@ -453,11 +474,19 @@ def login(service):
     print("Окно закроется само, как только увижу, что ты вошёл.")
     print("На экране «Stay signed in?» жми Yes — тогда входить придётся сильно реже.\n")
 
-    with browser(service, headless=False) as context:
+    with browser(service, headless=False, storage=False) as context:
         # Своя вкладка, а не context.pages[0]: стартовую about:blank Chromium
         # может закрыть сам, восстанавливая прошлую сессию профиля, и тогда
         # цикл мгновенно решал, что окно закрыли, и вход «не подтверждался».
         page = context.new_page()
+        # Пустую стартовую вкладку убираем: человеку показывают окно с двумя
+        # вкладками, одна из которых about:blank, и непонятно, где вход.
+        for other in context.pages:
+            if other is not page and other.url in ("about:blank", "chrome://newtab/"):
+                try:
+                    other.close()
+                except Exception:
+                    pass
         page.goto(spec["login_url"], wait_until="domcontentloaded", timeout=120000)
 
         deadline = time.time() + LOGIN_TIMEOUT_SEC

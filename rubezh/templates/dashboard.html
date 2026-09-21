@@ -156,9 +156,18 @@ td{padding:9px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
 tbody tr:last-child td{border-bottom:0}
 tbody tr:hover{background:var(--surface-2)}
 .t-title{font-weight:500}
+/* Задание из Moodle — ссылка на его страницу: подчёркивание только при
+   наведении, чтобы таблица не рябила синим */
+.t-title a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--ink-3)}
+.t-title a:hover{color:var(--accent);border-bottom-color:var(--accent)}
 .t-sub{font-size:11.5px;color:var(--ink-3)}
 .dot{width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--accent);flex:none}
-.crs{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11.5px;color:var(--ink-2);white-space:nowrap}
+/* Краткого кода у курсов AITU нет — в shortname лежит то же длинное название
+   с фамилией преподавателя. Поэтому ограничиваем ширину, иначе колонка
+   выдавливает балл за край карточки. */
+.crs{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11.5px;
+     color:var(--ink-2);white-space:nowrap;max-width:220px}
+.crs span{overflow:hidden;text-overflow:ellipsis}
 .empty{padding:26px 14px;text-align:center;color:var(--ink-3);font-size:13px}
 
 .day{display:flex;flex-direction:column;gap:0}
@@ -168,6 +177,68 @@ tbody tr:hover{background:var(--surface-2)}
 .slot .bd{border-left:2px solid var(--accent);padding-left:9px;min-width:0}
 .slot .bd .n{font-size:13px;font-weight:500}
 .slot .bd .m{font-size:11.5px;color:var(--ink-3);font-family:var(--mono)}
+/* Сетка дня: часы слева, пары — блоками поверх, как в бумажном расписании */
+.ag{position:relative;display:grid;grid-template-columns:46px 1fr}
+.ag-hours{grid-column:1/-1;display:grid;grid-template-columns:46px 1fr}
+.ag-h{grid-column:1/-1;display:grid;grid-template-columns:46px 1fr;
+      border-top:1px solid var(--border);align-items:start}
+.ag-h span{font-family:var(--mono);font-size:10px;color:var(--ink-3);
+           transform:translateY(-6px);padding-right:8px;text-align:right}
+.ag-h::after{content:"";grid-column:2}
+.ag-events{position:absolute;left:46px;right:0;top:0;pointer-events:none}
+.ag-ev{position:absolute;left:4px;right:4px;overflow:hidden;
+       border-left:2px solid var(--accent);border-radius:6px;padding:3px 8px;
+       background:var(--surface-2)}
+.ag-ev .n{font-size:12px;font-weight:500;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.ag-ev .m{font-size:10.5px;color:var(--ink-3);font-family:var(--mono);
+          white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.ag-ev.day{position:static;margin:0 0 3px;padding:3px 8px;font-size:11.5px}
+.ag-allday{display:grid;grid-template-columns:46px 1fr;gap:0;padding-bottom:6px;
+           border-bottom:1px solid var(--border);margin-bottom:4px}
+.ag-lbl{font-family:var(--mono);font-size:9.5px;color:var(--ink-3);letter-spacing:.04em;
+        text-transform:uppercase;padding-top:4px}
+.ag-empty{position:absolute;top:40%;left:0;right:0;text-align:center;
+          font-size:12.5px;color:var(--ink-3)}
+/* Онлайн-пара: пунктир вместо сплошной кромки, аудитории у неё нет */
+.ag-ev.online,.wk .ev.online{border-left-style:dashed}
+.ag-ev{pointer-events:auto}
+/* Режим правки: кнопки в углу пары. Мелкие, потому что пара — 40 px высотой */
+.ev-act{position:absolute;top:3px;right:4px;display:none;gap:2px}
+.editing .ev-act{display:flex}
+.ibtn{width:20px;height:20px;border:0;border-radius:5px;background:var(--surface-3);color:var(--ink-2);
+      font:inherit;font-size:11px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.ibtn:hover{background:var(--accent-soft);color:var(--accent-ink)}
+.ibtn.del:hover{background:var(--bad-soft);color:var(--bad)}
+.sch-tools{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-left:auto}
+.sch-tools .tab.today{text-decoration:underline dotted;text-underline-offset:3px}
+.sch-tools .btn{padding:4px 10px;font-size:12px}
+.btn.ghost{background:none;border:1px solid var(--border-strong);color:var(--ink-2)}
+.btn.ghost:hover{filter:none;background:var(--surface-2)}
+.sch-note{font-size:12px;color:var(--ink-2);padding:0 0 10px}
+/* Неделя: шесть колонок, пары стопкой. Часовая сетка на шесть дней не влезла бы */
+.wk{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.wk h4{margin:0 0 6px;font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.06em;
+       text-transform:uppercase;color:var(--ink-3)}
+.wk h4.today{color:var(--accent-ink)}
+.wk .ev{position:relative;border-left:2px solid var(--accent);border-radius:6px;padding:4px 8px;
+        background:var(--surface-2);margin-bottom:5px;min-width:0}
+.wk .ev .t{font-family:var(--mono);font-size:10.5px;color:var(--ink-3)}
+.wk .ev .n{font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wk .ev .m{font-size:10.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wk .none{font-size:11.5px;color:var(--ink-3);padding:4px 0}
+/* Форма правки: одна пара, все поля в ряд */
+.sch-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;
+          padding:0 0 12px;margin:0 0 12px;border-bottom:1px solid var(--border)}
+.sch-form label{display:flex;flex-direction:column;gap:3px;font-size:10.5px;color:var(--ink-3);
+                font-family:var(--mono);letter-spacing:.04em;text-transform:uppercase}
+.sch-form input,.sch-form select{font:inherit;font-size:12.5px;padding:5px 7px;border:1px solid var(--border-strong);
+                border-radius:6px;background:var(--surface);color:var(--ink);min-width:0}
+.sch-form .acts{grid-column:1/-1;display:flex;gap:8px}
+@media (max-width:760px){ .wk{grid-template-columns:repeat(2,minmax(0,1fr))} }
+/* Тип строки в списке заданий: задание, тест, рубеж, сессия */
+.type{display:inline-block;padding:1.5px 8px;border-radius:20px;font-size:11px;
+      background:var(--surface-3);color:var(--ink-2);white-space:nowrap}
+.type.alt{background:transparent;border:1px solid var(--border);color:var(--ink-3)}
 .gap{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);padding:4px 0 4px 54px;
      border-bottom:1px dashed var(--border)}
 
@@ -196,6 +267,81 @@ tbody tr:hover{background:var(--surface-2)}
 .risk{display:flex;gap:7px;align-items:flex-start;font-size:12.5px;color:var(--ink-2)}
 .risk svg{width:14px;height:14px;flex:none;margin-top:2px;stroke:var(--bad);fill:none;stroke-width:1.8}
 
+/* ── Силлабус ───────────────────────────────────────────────────────────── */
+.syl{display:flex;flex-direction:column;gap:12px}
+/* Предметов много, названия длинные — ряд переносится. Голый текст на второй строке
+   терялся («Digital Media…» не замечали), поэтому здесь каждая вкладка — чип с рамкой,
+   а весь ряд собран в одну подложку: перенос читается как продолжение того же выбора. */
+.syl>.tabs{gap:6px;padding:6px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r)}
+.syl>.tabs .tab{border:1px solid var(--border);background:var(--surface-2);color:var(--ink-2);
+  padding:5px 11px;font-size:12.5px}
+.syl>.tabs .tab:hover{border-color:var(--border-strong);color:var(--ink)}
+.syl>.tabs .tab.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
+.syl .courses{grid-template-columns:repeat(auto-fill,minmax(420px,1fr))}
+.syl table td{padding:6px 14px;font-size:12.5px}
+.syl tr.per td{padding:8px 14px 4px;font-family:var(--mono);font-size:10px;letter-spacing:.07em;
+     text-transform:uppercase;color:var(--ink-3);background:var(--surface-2)}
+.syl td.pts{font-family:var(--mono);font-weight:600;width:44px;text-align:right;white-space:nowrap}
+.syl td.swk{font-family:var(--mono);font-size:11px;color:var(--ink-3);white-space:nowrap;text-align:right}
+.syl tr.now td{background:var(--accent-soft)}
+.syl details{border-top:1px solid var(--border)}
+.syl summary{padding:9px 14px;font-size:12.5px;color:var(--ink-2);cursor:pointer;list-style:none;
+     display:flex;justify-content:space-between}
+.syl summary::after{content:"+";font-family:var(--mono);color:var(--ink-3)}
+.syl details[open] summary::after{content:"–"}
+.syl summary:hover{background:var(--surface-2)}
+.syl .plan{padding:0 14px 10px}
+.syl .wkrow{display:grid;grid-template-columns:34px 76px 1fr;gap:8px;padding:5px 0;
+     border-bottom:1px dashed var(--border);font-size:12.5px;align-items:baseline}
+.syl .wkrow:last-child{border-bottom:0}
+.syl .wkrow .n,.syl .wkrow .d{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.syl .wkrow.now .n,.syl .wkrow.now .d{color:var(--accent-ink);font-weight:600}
+.syl .wkrow .ev{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.syl .rules{margin:0;padding:0 14px 10px 30px;font-size:12.5px;color:var(--ink-2)}
+.syl .rules li{margin:3px 0}
+.syl .who-list{padding:0 14px 10px;font-size:12.5px;display:flex;flex-direction:column;gap:5px}
+.syl .who-list .m{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.syl .src{padding:8px 14px;font-size:11px;color:var(--ink-3);border-top:1px solid var(--border)}
+/* «К следующему занятию»: две недели рядом — эта и следующая */
+.syl .prep{display:grid;grid-template-columns:1fr 1fr}
+.syl .prep-w{padding:12px 14px;min-width:0}
+.syl .prep-w+.prep-w{border-left:1px solid var(--border)}
+.syl .prep-w .k{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.syl .prep-w.next .k{color:var(--accent-ink)}
+.syl .prep-w h3{font-size:14px;margin:3px 0 8px}
+.syl .prep-w .h4{font-size:11.5px;color:var(--ink-3);margin:9px 0 3px}
+.syl .prep-w ul{margin:0;padding-left:18px;font-size:12.5px;color:var(--ink-2)}
+.syl .prep-w li{margin:2px 0}
+.syl .prep-w .ev{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.syl .prep-note{grid-column:1/-1;padding:9px 14px;font-size:12px;color:var(--ink-2);
+     background:var(--surface-2);border-top:1px solid var(--border)}
+.syl .wkrow .sub{font-size:11.5px;color:var(--ink-3);margin-top:1px}
+@media (max-width:760px){ .syl .prep{grid-template-columns:1fr}
+  .syl .prep-w+.prep-w{border-left:0;border-top:1px solid var(--border)} }
+@media (max-width:760px){ .syl .courses{grid-template-columns:1fr} }
+
+/* ── Страницы курсов Moodle: тексты недели, которых нет в календаре ─────── */
+.mw{display:flex;flex-direction:column}
+.mw-c{padding:11px 14px;border-bottom:1px solid var(--border)}
+.mw-c:last-child{border-bottom:0}
+.mw-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.mw-h b{font-size:13px;font-weight:600}
+.mw-h .sec{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.mw-t{position:relative;white-space:pre-line;font-size:12.5px;color:var(--ink-2);margin-top:6px;
+      padding:8px 10px;border-left:2px solid var(--accent);background:var(--surface-2);border-radius:0 6px 6px 0}
+.mw-t.clamp{max-height:7.5em;overflow:hidden}
+.mw-t.clamp::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2.5em;
+      background:linear-gradient(transparent,var(--surface-2))}
+.mw-more{background:none;border:0;padding:2px 0;font:inherit;font-size:11.5px;color:var(--accent-ink);cursor:pointer}
+.mw-i{display:flex;gap:8px;align-items:baseline;padding:5px 0;font-size:12.5px;flex-wrap:wrap}
+.mw-i a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--ink-3)}
+.mw-i a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+.mw-i .m{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.mw-i .lock{font-size:11.5px;color:var(--warn);flex-basis:100%}
+.mw-empty{padding:12px 14px;font-size:12.5px;color:var(--ink-3)}
+.syl .prep + .mw:not(:empty){border-top:1px solid var(--border)}
+
 .note{font-size:12px;color:var(--ink-3);text-align:center;padding:4px 0 0}
 /* Единственное на дашборде, что требует действия руками — и выглядеть должно так */
 .relog{border:1px solid var(--warn);background:var(--warn-soft);border-radius:var(--r);
@@ -210,7 +356,11 @@ tbody tr:hover{background:var(--surface-2)}
 /* Окно входа появляется не мгновенно — кнопка обязана сказать об этом сама,
    иначе клик выглядит как «ничего не произошло» и человек жмёт ещё раз. */
 .btn.waiting{pointer-events:none;opacity:.75}
-.btn.waiting svg{animation:spin 1s linear infinite}
+/* Крутить саму иконку входа (дверь со стрелкой) нельзя — выглядит сломанно.
+   На время ожидания она уступает место кольцу. */
+.btn.waiting svg{display:none}
+.btn.waiting::before{content:"";flex:none;width:13px;height:13px;border-radius:50%;
+     border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .demo{display:flex;align-items:center;gap:8px;padding:8px 13px;border-radius:var(--r);
       background:var(--warn-soft);color:var(--warn);font-size:12.5px;font-weight:500}
@@ -241,12 +391,7 @@ tbody tr:hover{background:var(--surface-2)}
       <div class="mark">Р</div>
       <div><b>AITU Rubezh</b><span id="brandSub"></span></div>
     </div>
-    <nav class="nav">
-      <a href="#top" class="on"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21H3z"/></svg><span>Главная</span></a>
-      <a href="#tasks"><svg viewBox="0 0 24 24"><path d="M9 5h11M9 12h11M9 19h11M4 5l1 1 2-2M4 12l1 1 2-2M4 19l1 1 2-2"/></svg><span>Задания</span></a>
-      <a href="#grades"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V4M16 19v-7M22 19H2"/></svg><span>Оценки</span></a>
-      <a href="#dates"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/></svg><span>Даты</span></a>
-    </nav>
+    <nav class="nav" id="nav"></nav>
     <div class="side-foot"><span id="srcNote">данные</span>
       <button class="tbtn" id="themeBtn" type="button">Тема</button></div>
   </aside>
@@ -262,15 +407,15 @@ tbody tr:hover{background:var(--surface-2)}
       <div class="eyebrow" id="todayLbl"></div>
     </header>
 
-    <section class="tiles" id="tiles"></section>
+    <section class="tiles" id="tiles" data-page="home"></section>
 
-    <section class="cards">
-      <div class="card" id="dates">
+    <section class="cards" data-page="home dates grades">
+      <div class="card" id="dates" data-page="home dates">
         <div class="card-h"><h2>Ключевые даты</h2><span class="eyebrow">триместр</span></div>
         <div class="card-b"><div class="dates" id="keyDates"></div></div>
       </div>
 
-      <div class="card">
+      <div class="card" data-page="home dates">
         <div class="card-h"><h2>Нагрузка</h2><span class="eyebrow" id="monLbl"></span></div>
         <div class="card-b">
           <div class="mon" id="month"></div>
@@ -284,28 +429,52 @@ tbody tr:hover{background:var(--surface-2)}
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" data-page="home grades">
         <div class="card-h"><h2>Допуск к экзаменам</h2><span class="eyebrow">рубежи</span></div>
         <div class="card-b"><div class="gates" id="gates"></div></div>
       </div>
     </section>
 
-    <section class="split">
-      <div class="card" id="tasks">
+    <section class="split" data-page="home tasks schedule">
+      <div class="card" id="tasks" data-page="home tasks">
         <div class="card-h"><h2>Задания</h2><div class="tabs" id="tabs"></div></div>
         <div class="tw"><table>
-          <thead><tr><th>Статус</th><th>Срок</th><th>Задание</th><th>Курс</th><th>Балл</th></tr></thead>
+          <thead><tr><th>Статус</th><th>Срок</th><th>Задание</th><th>Курс</th><th>Тип</th><th>Балл</th></tr></thead>
           <tbody id="rows"></tbody>
         </table></div>
       </div>
 
-      <div class="card">
-        <div class="card-h"><h2>Расписание</h2><span class="eyebrow" id="dayLbl"></span></div>
-        <div class="card-b"><div class="day" id="day"></div></div>
+      <div class="card" data-page="home schedule">
+        <div class="card-h"><h2>Расписание</h2>
+          <div class="sch-tools" id="schTools"></div>
+          <span class="eyebrow" id="dayLbl"></span></div>
+        <div class="card-b">
+          <div class="sch-note" id="schNote" hidden></div>
+          <form class="sch-form" id="schForm" hidden></form>
+          <div class="day" id="day"></div>
+        </div>
       </div>
     </section>
 
-    <section id="grades">
+    <section data-page="home tasks">
+      <div class="card" id="moodleWeek" hidden>
+        <div class="card-h"><h2>В курсах Moodle на этой неделе</h2>
+          <span class="eyebrow" id="moodleWeekLbl"></span></div>
+        <div class="mw" id="moodleWeekBody"></div>
+      </div>
+    </section>
+
+    <section data-page="home tasks">
+      <div class="card" id="moodleTodo" hidden>
+        <div class="card-h"><h2>Сделать в Moodle</h2><div class="tabs" id="todoTabs"></div></div>
+        <div class="tw"><table>
+          <thead><tr><th>Статус</th><th>Неделя</th><th>Что</th><th>Курс</th><th>Тип</th></tr></thead>
+          <tbody id="todoRows"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <section id="grades" data-page="home grades">
       <div class="head" style="margin-bottom:10px">
         <div><h2 style="font-size:15px">Курсы</h2>
         <p style="margin:2px 0 0;color:var(--ink-2);font-size:12.5px">
@@ -314,12 +483,29 @@ tbody tr:hover{background:var(--surface-2)}
       <div class="courses" id="courses"></div>
     </section>
 
+    <section data-page="syllabus" class="syl">
+      <div class="tabs" id="sylTabs"></div>
+      <div class="card" id="sylPrep" hidden>
+        <div class="card-h"><h2 id="sylPrepH">К следующему занятию</h2>
+          <span class="eyebrow" id="sylPrepLbl"></span></div>
+        <div class="prep" id="sylPrepBody"></div>
+        <div class="mw" id="sylMoodle"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Ближайшее по силлабусам</h2>
+          <span class="eyebrow" id="sylLbl"></span></div>
+        <div class="card-b"><div class="dates" id="sylSoon"></div></div>
+      </div>
+      <div class="courses" id="syllabus"></div>
+    </section>
+
     <p class="note" id="foot"></p>
   </main>
 </div>
 
 <script>
 const DATA = __RUBEZH_DATA__;
+const PAGE = "__RUBEZH_PAGE__";   // какой раздел собран в этот файл
 
 const MONTHS = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
 const DOW = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
@@ -340,12 +526,55 @@ function whenText(n) {
 }
 
 /* ── Шапка ─────────────────────────────────────────────────────────────── */
+/* ── Страницы ──────────────────────────────────────────────────────────────
+   Раньше это была одна страница с якорями: всё грузилось разом и «Оценки»
+   означало «промотай вниз». Теперь каждый раздел — отдельный файл, а сборка
+   кладёт их рядом. Разметка при этом одна на всех: секции помечены data-page,
+   лишние прячутся. Так разделы не разъезжаются между собой при правках. */
+const PAGES = [
+  { id: "home", file: "dashboard.html", name: "Главная", sub: "всё важное на один экран",
+    icon: '<path d="M3 10.5 12 3l9 7.5V21H3z"/>' },
+  { id: "tasks", file: "tasks.html", name: "Задания", sub: "сроки и статус по каждому",
+    icon: '<path d="M9 5h11M9 12h11M9 19h11M4 5l1 1 2-2M4 12l1 1 2-2M4 19l1 1 2-2"/>' },
+  { id: "grades", file: "grades.html", name: "Оценки", sub: "рубежи, экзамен и допуск",
+    icon: '<path d="M4 19V9M10 19V4M16 19v-7M22 19H2"/>' },
+  { id: "schedule", file: "schedule.html", name: "Расписание", sub: "пары по часам",
+    icon: '<path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="9"/>' },
+  { id: "dates", file: "dates.html", name: "Даты", sub: "рубежи и сессия триместра",
+    icon: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/>' },
+  { id: "syllabus", file: "syllabus.html", name: "Силлабус", sub: "план курса: баллы, недели, правила",
+    icon: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/>' },
+];
+const here = PAGES.find(p => p.id === PAGE) || PAGES[0];
+const navBox = document.getElementById("nav");
+PAGES.forEach(p => {
+  const a = el("a", p.id === PAGE ? "on" : null);
+  a.href = p.file;
+  a.innerHTML = '<svg viewBox="0 0 24 24">' + p.icon + '</svg>';
+  a.appendChild(el("span", null, p.name));
+  navBox.appendChild(a);
+});
+document.querySelectorAll("[data-page]").forEach(node => {
+  if (!node.dataset.page.split(" ").includes(PAGE)) node.style.display = "none";
+});
+/* Сетки свёрстаны под три и две карточки. Если на этой странице от секции
+   осталась одна, колонки надо пересобрать — иначе карточка жмётся в треть
+   ширины, а рядом зияет пустота от спрятанных соседей. */
+document.querySelectorAll("section.cards, section.split").forEach(sec => {
+  const shown = [...sec.children].filter(n => n.style.display !== "none").length;
+  if (shown && shown < sec.children.length)
+    sec.style.gridTemplateColumns = "repeat(" + shown + ", minmax(0,1fr))";
+});
+if (PAGE !== "home") document.title = "AITU Rubezh — " + here.name;
+
 document.getElementById("brandSub").textContent = DATA.group;
-document.getElementById("hello").textContent = "Привет, " + DATA.student;
-document.getElementById("context").textContent =
-  [DATA.term, DATA.group ? "группа " + DATA.group : null,
-   DATA.courses.length ? DATA.courses.length + " дисциплин" : "дисциплин пока нет"]
-    .filter(Boolean).join(" · ");
+document.getElementById("hello").textContent =
+  PAGE === "home" ? "Привет, " + DATA.student : here.name;
+document.getElementById("context").textContent = PAGE === "home"
+  ? [DATA.term, DATA.group ? "группа " + DATA.group : null,
+     DATA.courses.length ? DATA.courses.length + " дисциплин" : "дисциплин пока нет"]
+      .filter(Boolean).join(" · ")
+  : here.sub;
 document.getElementById("todayLbl").textContent =
   DOW[(today.getDay() + 6) % 7] + ", " + fmt(DATA.today);
 document.getElementById("srcNote").textContent = DATA.demo ? "демо-данные" : "живые данные";
@@ -478,17 +707,26 @@ if (!DATA.demo && (DATA.notes || []).length) {
    а списки — пустыми. Считаем только по тому, что действительно есть: пустой
    дашборд честнее, чем нули, которые выглядят как двойки. */
 const allItems = [];
-DATA.courses.forEach(c => (c.items || []).forEach(i =>
-  allItems.push(Object.assign({}, i, { code: c.code || "", course: c.title }))));
+DATA.courses.forEach(c => (c.items || []).forEach(i => {
+  /* Аттестации из журнала (РК1, РК2, экзамен) — своды, а не задания: срока у
+     них нет. В списке дедлайнов и в счётчике «сдано» им делать нечего, их
+     место — в разборе курса. */
+  if (!i.due) return;
+  allItems.push(Object.assign({}, i, { code: c.code || "", course: c.title }));
+}));
 (DATA.loose_deadlines || []).forEach(i =>
   allItems.push(Object.assign({}, i, { code: i.code || "", course: i.course || "" })));
 
 const scored = DATA.courses.filter(c => c.eval);      // курсы с открытым журналом
-const hasGrades = scored.length > 0;
+/* «Журнал открыт» и «в журнале уже что-то есть» — разные вещи. В начале
+   триместра оценок нет ни одной, среднее РК выходит нулём, и светофор красит
+   его красным, будто всё завалено. Средние считаем только по оценённому. */
+const marked = scored.filter(c => c.eval.rm.graded || c.eval.re.graded || c.eval.final.graded);
+const hasGrades = marked.length > 0;
 const graded = allItems.filter(i => i.score !== null && i.score !== undefined);
 const pending = allItems.filter(i => i.score === null || i.score === undefined);
 const avg = hasGrades
-  ? scored.reduce((s, c) => s + c.eval.average_rk, 0) / scored.length : null;
+  ? marked.reduce((s, c) => s + c.eval.average_rk, 0) / marked.length : null;
 const withAtt = scored.filter(c => c.eval.attendance !== null);
 const attAvg = withAtt.length
   ? withAtt.reduce((s, c) => s + c.eval.attendance, 0) / withAtt.length : null;
@@ -582,7 +820,7 @@ const gatesBox = document.getElementById("gates");
 if (attAvg !== null) gatesBox.appendChild(gate("Посещаемость (нужно 70%)", attAvg, 70, "%"));
 if (hasGrades) {
   gatesBox.appendChild(gate("Среднее РК1 и РК2 (нужно 50)", avg, 50, ""));
-  const worst = scored.reduce((a, c) => c.eval.rm.score < a.eval.rm.score ? c : a, scored[0]);
+  const worst = marked.reduce((a, c) => c.eval.rm.score < a.eval.rm.score ? c : a, marked[0]);
   gatesBox.appendChild(gate("Худший РК1 — " + (worst.code || worst.title) + " (нужно 25)",
                             worst.eval.rm.score, 25, ""));
 }
@@ -608,11 +846,27 @@ if (!gatesBox.children.length) {
 }
 
 /* ── Задания ───────────────────────────────────────────────────────────── */
+/* В таблице, кроме заданий, стоят и даты триместра: начало занятий, рубежи,
+   сессия. Для человека это один список «что и когда», а не два. В счётчик
+   «сдано» они при этом не идут — сдавать там нечего, поэтому отдельный список,
+   а не добавка к allItems. */
+const DATE_KIND = { rk: "Рубеж", exam: "Сессия", holiday: "Выходной", term: "Триместр" };
+const dateItems = (DATA.key_dates || []).map(d => ({
+  name: d.title, due: d.date, at: "", code: "", course: "",
+  kind: "date", type: DATE_KIND[d.kind] || "Дата", span: d.span,
+  score: null, max: null, period: null,
+}));
+const TYPES = { assign: "Задание", assignment: "Задание", quiz: "Тест", forum: "Форум",
+                lesson: "Урок", workshop: "Работа", attendance: "Посещение" };
+allItems.forEach(i => { i.type = i.type || TYPES[i.kind] || "Задание"; });
+const tableItems = allItems.concat(dateItems);
+
 const FILTERS = [
-  { id: "late", name: "Просрочено", f: i => i.score === null && days(i.due, today) < 0 },
+  { id: "today", name: "Сегодня", f: i => days(i.due, today) === 0 },
+  { id: "late", name: "Просрочено", f: i => i.score === null && i.kind !== "date" && days(i.due, today) < 0 },
   { id: "week", name: "Неделя", f: i => i.score === null && days(i.due, today) >= 0 && days(i.due, today) <= 7 },
   { id: "month", name: "Месяц", f: i => i.score === null && days(i.due, today) >= 0 && days(i.due, today) <= 31 },
-  { id: "exam", name: "Экзамены", f: i => ["midterm", "endterm", "final"].includes(i.kind) },
+  { id: "exam", name: "Экзамены", f: i => ["midterm", "endterm", "final"].includes(i.kind) || i.type === "Сессия" },
   { id: "done", name: "Сдано", f: i => i.score !== null },
 ];
 let active = "week";
@@ -621,7 +875,7 @@ FILTERS.forEach(f => {
   const b = el("button", "tab" + (f.id === active ? " on" : ""));
   b.type = "button";
   b.appendChild(document.createTextNode(f.name));
-  b.appendChild(el("span", "c", String(allItems.filter(f.f).length)));
+  b.appendChild(el("span", "c", String(tableItems.filter(f.f).length)));
   b.onclick = () => { active = f.id; [...tabs.children].forEach(x => x.classList.remove("on"));
     b.classList.add("on"); draw(); };
   tabs.appendChild(b);
@@ -630,28 +884,58 @@ function draw() {
   const f = FILTERS.find(x => x.id === active);
   const rows = document.getElementById("rows");
   rows.textContent = "";
-  const list = allItems.filter(f.f).sort((a, b) => a.due < b.due ? -1 : 1);
+  const list = tableItems.filter(f.f).sort((a, b) => a.due < b.due ? -1 : 1);
   if (!list.length) {
     const tr = el("tr"), td = el("td", "empty", "Ничего нет — это хорошая новость.");
-    td.colSpan = 5; tr.appendChild(td); rows.appendChild(tr); return;
+    td.colSpan = 6; tr.appendChild(td); rows.appendChild(tr); return;
   }
   list.forEach(i => {
     const tr = el("tr");
     const n = days(i.due, today);
     const st = el("td");
-    if (i.score !== null) st.appendChild(el("span", "pill ok", "сдано"));
+    /* У даты триместра нет статуса «сдано/просрочено»: её не сдают, она просто
+       наступает. Поэтому светофор только для заданий. */
+    if (i.kind === "date") st.appendChild(el("span", "pill mute",
+      n === 0 ? "сегодня" : n < 0 ? "прошло" : "через " + n + " дн."));
+    else if (i.score !== null) st.appendChild(el("span", "pill ok", "сдано"));
     else { const w = whenText(n); st.appendChild(el("span", "pill " + w.k, w.t)); }
     tr.appendChild(st);
-    const dt = el("td"); dt.appendChild(el("span", "num", fmt(i.due))); tr.appendChild(dt);
+    const dt = el("td"); dt.appendChild(el("span", "num", fmt(i.due)));
+    if (i.at) { const h = el("div", "t-sub"); h.textContent = "до " + i.at; dt.appendChild(h); }
+    tr.appendChild(dt);
     const ti = el("td");
-    ti.appendChild(el("div", "t-title", i.name));
-    ti.appendChild(el("div", "t-sub", i.period === "final" ? "итоговый экзамен" : "рубеж " + i.period));
+    const name = el("div", "t-title");
+    if (i.url) {
+      /* Клик ведёт на страницу задания в Moodle — в новой вкладке, чтобы
+         дашборд остался открытым. Ссылка есть только у дедлайнов из Moodle;
+         у дат триместра и строк из журнала вести некуда. */
+      const a = el("a", null, i.name);
+      a.href = i.url; a.target = "_blank"; a.rel = "noopener";
+      name.appendChild(a);
+    } else name.textContent = i.name;
+    ti.appendChild(name);
+    ti.appendChild(el("div", "t-sub", i.kind === "date"
+      ? (i.span || "")
+      : (i.period === "final" ? "итоговый экзамен" : "рубеж " + i.period)));
     tr.appendChild(ti);
-    const cs = el("td"); const w = el("span", "crs");
-    w.appendChild(el("i", "dot")); w.appendChild(document.createTextNode(i.code));
-    cs.appendChild(w); tr.appendChild(cs);
+    const cs = el("td");
+    if (i.code || i.course) {
+      const w = el("span", "crs");
+      w.appendChild(el("i", "dot"));
+      const nm = el("span", null, i.code || i.course);
+      nm.title = i.course || i.code;          // полное имя — по наведению
+      w.appendChild(nm);
+      cs.appendChild(w);
+    }
+    tr.appendChild(cs);
+    const tp = el("td");
+    tp.appendChild(el("span", "type" + (i.kind === "date" ? " alt" : ""), i.type));
+    tr.appendChild(tp);
     const sc = el("td", "num");
-    sc.textContent = i.score !== null ? i.score + " / " + i.max : "— / " + i.max;
+    /* Вес задания Moodle отдаёт только внутри курса, у дедлайна из календаря
+       его нет вовсе. «— / null» в клетке балла — не честная пустота, а сбой. */
+    const outOf = (i.max === null || i.max === undefined) ? "" : " / " + i.max;
+    sc.textContent = (i.score !== null ? String(i.score) : "—") + outOf;
     if (i.score === null) sc.style.color = "var(--ink-3)";
     tr.appendChild(sc);
     rows.appendChild(tr);
@@ -659,29 +943,630 @@ function draw() {
 }
 draw();
 
-/* ── Расписание ────────────────────────────────────────────────────────── */
+/* ── Расписание ────────────────────────────────────────────────────────────
+   Список пар не показывает главного — дырок между ними и того, сколько дня
+   занято. Поэтому часовая сетка: пара стоит там, где она в дне, и окно в два
+   часа видно, не считая в уме. Сверху полоса «весь день» — туда идут даты
+   триместра, у которых нет часа: рубежи, сессия, выходные.
+
+   Расписание недельное (day 1–6 из schedule.json): на главной — сегодня, на
+   странице «Расписание» — любой день или вся неделя. Пары без day (с портала)
+   считаются сегодняшними, как раньше.
+
+   Правки. Дашборд — файл на диске, писать в schedule.json из него нечем,
+   поэтому изменённая неделя лежит в localStorage этого браузера поверх файла.
+   Ключ помнит, от какой версии файла правки: обновился файл — правки
+   сбрасываются, и об этом написано, а не молча. */
+const HOUR = 48;                       // высота часа: ниже — вторая строка пары обрезается
+const minutes = t => (+String(t).slice(0, 2) * 60) + (+String(t).slice(3, 5) || 0);
 const dayBox = document.getElementById("day");
-document.getElementById("dayLbl").textContent =
-  DATA.schedule.length ? DATA.schedule.length + " пары" : "пар нет";
-if (!DATA.schedule.length)
-  dayBox.appendChild(el("div", "empty", "Расписание ещё не опубликовали."));
-let prevEnd = null;
-DATA.schedule.forEach(s => {
-  if (prevEnd) {
-    const gapMin = (+s.start.slice(0, 2) * 60 + +s.start.slice(3)) - (+prevEnd.slice(0, 2) * 60 + +prevEnd.slice(3));
-    if (gapMin >= 30) dayBox.appendChild(el("div", "gap", "перерыв " + gapMin + " мин"));
+const schTools = document.getElementById("schTools");
+const schNote = document.getElementById("schNote");
+const schForm = document.getElementById("schForm");
+const DOW_FULL = ["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"];
+const plural = (n, one, few, many) =>
+  n % 10 === 1 && n % 100 !== 11 ? one
+  : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many;
+
+const SKEY = "rubezh.schedule";
+const baseLessons = (DATA.schedule || []).filter(s => /^\d\d:\d\d/.test(s.start || ""));
+const baseSig = JSON.stringify(baseLessons);
+let lessons = baseLessons.map(x => Object.assign({}, x));
+let edited = false;
+try {
+  const saved = JSON.parse(localStorage.getItem(SKEY) || "null");
+  if (saved && saved.base === baseSig && Array.isArray(saved.lessons)) {
+    lessons = saved.lessons; edited = true;
+  } else if (saved) {
+    localStorage.removeItem(SKEY);
+    schNote.textContent = "Расписание в файле обновилось — правки, сделанные здесь под старую версию, сброшены.";
+    schNote.hidden = false;
   }
-  const row = el("div", "slot");
-  const tm = el("div", "tm"); tm.appendChild(el("div", null, s.start));
-  const e = el("div", null, s.end); e.style.color = "var(--ink-3)"; e.style.fontSize = "10px";
-  tm.appendChild(e); row.appendChild(tm);
-  const bd = el("div", "bd");
-  bd.appendChild(el("div", "n", s.title));
-  bd.appendChild(el("div", "m", s.kind + " · " + s.room));
-  row.appendChild(bd);
-  dayBox.appendChild(row);
-  prevEnd = s.end;
+} catch (e) {}
+
+const weekday = (today.getDay() + 6) % 7 + 1;          // 1 = Пн … 7 = Вс
+const weekly = lessons.some(s => s.day);
+/* 0 — вся неделя. Главная всегда показывает сегодня; страница расписания
+   открывается на сегодняшнем дне, а в воскресенье — на понедельнике. */
+let view = PAGE === "schedule" && weekday === 7 ? 1 : weekday;
+let editing = false;
+
+const bySt = (a, b) => minutes(a.start) - minutes(b.start);
+const forDay = d => lessons.filter(s => !s.day || s.day === d).sort(bySt);
+const where = s => s.online || !s.room ? "онлайн" : s.room;
+
+function persist() {
+  edited = true;
+  try { localStorage.setItem(SKEY, JSON.stringify({ base: baseSig, lessons })); }
+  catch (e) { schNote.textContent = "Не удалось сохранить в браузере: " + e.message; schNote.hidden = false; }
+  render();
+}
+
+function actions(s) {
+  const box = el("div", "ev-act");
+  const e = el("button", "ibtn", "\u270E"); e.type = "button"; e.title = "Изменить";
+  e.onclick = () => openForm(s);
+  const d = el("button", "ibtn del", "\u2715"); d.type = "button"; d.title = "Удалить";
+  d.onclick = () => { if (confirm("Удалить пару «" + s.title + " " + s.start + "»?")) {
+    lessons = lessons.filter(x => x !== s); persist(); } };
+  box.appendChild(e); box.appendChild(d);
+  return box;
+}
+
+/* ── день: часовая сетка ── */
+function renderDay(d) {
+  const list = forDay(d);
+  document.getElementById("dayLbl").textContent =
+    list.length ? list.length + " " + plural(list.length, "пара", "пары", "пар") : "пар нет";
+
+  const allDay = (DATA.key_dates || []).filter(x => days(x.date, today) === 0);
+  if (allDay.length && d === weekday) {
+    const strip = el("div", "ag-allday");
+    strip.appendChild(el("div", "ag-lbl", "весь день"));
+    const box2 = el("div");
+    allDay.forEach(x => box2.appendChild(el("div", "ag-ev day", x.title)));
+    strip.appendChild(box2);
+    dayBox.appendChild(strip);
+  }
+
+  /* Границы сетки берём от самих пар, но не уже рабочего дня: пустая сетка с
+     одним часом выглядела бы сломанной. */
+  const starts = list.map(s => minutes(s.start));
+  const ends = list.map(s => minutes(s.end || s.start));
+  const from = Math.floor(Math.min(8 * 60, ...(starts.length ? starts : [8 * 60])) / 60);
+  const to = Math.ceil(Math.max(18 * 60, ...(ends.length ? ends : [18 * 60])) / 60);
+
+  const grid = el("div", "ag");
+  const hours = el("div", "ag-hours");
+  for (let h = from; h <= to; h++) {
+    const row = el("div", "ag-h");
+    row.style.height = HOUR + "px";
+    row.appendChild(el("span", null, (h < 10 ? "0" : "") + h + ":00"));
+    hours.appendChild(row);
+  }
+  grid.appendChild(hours);
+
+  const layer = el("div", "ag-events");
+  layer.style.height = (to - from + 1) * HOUR + "px";
+  list.forEach(s => {
+    const top = (minutes(s.start) - from * 60) / 60 * HOUR;
+    const height = Math.max(22, (minutes(s.end || s.start) - minutes(s.start)) / 60 * HOUR);
+    const ev = el("div", "ag-ev" + (where(s) === "онлайн" ? " online" : ""));
+    ev.style.cssText = "top:" + top + "px;height:" + height + "px";
+    ev.appendChild(el("div", "n", [s.course, s.title].filter(Boolean).join(" · ")));
+    ev.appendChild(el("div", "m", s.start + "–" + s.end
+      + [s.kind, where(s), s.teacher].filter(Boolean).map(x => " · " + x).join("")));
+    ev.appendChild(actions(s));
+    layer.appendChild(ev);
+  });
+  if (!list.length)
+    layer.appendChild(el("div", "ag-empty", weekly ? "В этот день пар нет." : "Расписание ещё не опубликовали."));
+  grid.appendChild(layer);
+  dayBox.appendChild(grid);
+}
+
+/* ── неделя: шесть колонок ── */
+function renderWeek() {
+  const n = lessons.length;
+  document.getElementById("dayLbl").textContent = n + " " + plural(n, "пара", "пары", "пар") + " в неделю";
+  const wk = el("div", "wk");
+  for (let d = 1; d <= 6; d++) {
+    const col = el("div");
+    col.appendChild(el("h4", d === weekday ? "today" : null, DOW[d - 1]));
+    const list = forDay(d);
+    if (!list.length) col.appendChild(el("div", "none", "—"));
+    list.forEach(s => {
+      const ev = el("div", "ev" + (where(s) === "онлайн" ? " online" : ""));
+      ev.appendChild(el("div", "t", s.start + "–" + s.end));
+      const nm = el("div", "n", s.course || s.title); nm.title = s.title;
+      ev.appendChild(nm);
+      ev.appendChild(el("div", "m", [s.kind, where(s)].filter(Boolean).join(" · ")));
+      ev.appendChild(actions(s));
+      col.appendChild(ev);
+    });
+    wk.appendChild(col);
+  }
+  dayBox.appendChild(wk);
+}
+
+/* ── форма правки ── */
+function field(name, label, value, type) {
+  const l = el("label", null, label);
+  const i = el(type === "select" ? "select" : "input");
+  if (type === "select") {
+    DOW_FULL.slice(0, 6).forEach((t, k) => { const o = el("option", null, t); o.value = k + 1; i.appendChild(o); });
+  } else i.type = type || "text";
+  i.name = name; i.value = value;
+  l.appendChild(i);
+  return l;
+}
+function openForm(s) {
+  schForm.textContent = "";
+  schForm.hidden = false;
+  const v = s || { day: view || weekday, start: "", end: "", course: "", title: "", kind: "Практика", room: "", teacher: "" };
+  schForm.appendChild(field("day", "День", String(v.day || 1), "select"));
+  schForm.appendChild(field("start", "Начало", v.start, "time"));
+  schForm.appendChild(field("end", "Конец", v.end, "time"));
+  schForm.appendChild(field("course", "Код", v.course));
+  schForm.appendChild(field("title", "Предмет", v.title));
+  schForm.appendChild(field("kind", "Тип", v.kind));
+  schForm.appendChild(field("room", "Аудитория (пусто = онлайн)", v.room));
+  schForm.appendChild(field("teacher", "Преподаватель", v.teacher || ""));
+  const acts = el("div", "acts");
+  const ok = el("button", "btn", s ? "Сохранить" : "Добавить"); ok.type = "submit";
+  const no = el("button", "btn ghost", "Отмена"); no.type = "button";
+  no.onclick = () => { schForm.hidden = true; };
+  acts.appendChild(ok); acts.appendChild(no);
+  schForm.appendChild(acts);
+  schForm.onsubmit = ev => {
+    ev.preventDefault();
+    const f = Object.fromEntries(new FormData(schForm));
+    if (!/^\d\d:\d\d$/.test(f.start) || !f.title.trim()) { alert("Нужны хотя бы время начала и предмет."); return; }
+    const row = {
+      day: +f.day, start: f.start, end: f.end || f.start, course: f.course.trim(),
+      title: f.title.trim(), kind: f.kind.trim(), room: f.room.trim(),
+      teacher: f.teacher.trim(), online: !f.room.trim(),
+    };
+    if (s) Object.assign(s, row); else lessons.push(row);
+    schForm.hidden = true;
+    persist();
+  };
+  schForm.querySelector("input[name=start]").focus();
+}
+
+/* ── переключатели ── */
+function render() {
+  dayBox.textContent = "";
+  dayBox.classList.toggle("editing", editing);
+  if (view === 0) renderWeek(); else renderDay(view);
+  if (PAGE !== "schedule") return;
+  schTools.textContent = "";
+  const mk = (label, id, cls) => {
+    const b = el("button", "tab" + (view === id ? " on" : "") + (cls ? " " + cls : ""), label);
+    b.type = "button"; b.onclick = () => { view = id; render(); };
+    schTools.appendChild(b);
+  };
+  for (let d = 1; d <= 6; d++) mk(DOW[d - 1], d, d === weekday ? "today" : "");
+  mk("Неделя", 0);
+  const edit = el("button", "btn" + (editing ? "" : " ghost"), editing ? "Готово" : "Изменить");
+  edit.type = "button";
+  edit.onclick = () => { editing = !editing; schForm.hidden = true; render(); };
+  schTools.appendChild(edit);
+  if (editing) {
+    const add = el("button", "btn ghost", "+ Пара"); add.type = "button";
+    add.onclick = () => openForm(null);
+    schTools.appendChild(add);
+    if (edited) {
+      const reset = el("button", "btn ghost", "Сбросить правки"); reset.type = "button";
+      reset.onclick = () => { if (confirm("Вернуть расписание из файла? Все правки в браузере пропадут.")) {
+        localStorage.removeItem(SKEY); lessons = baseLessons.map(x => Object.assign({}, x));
+        edited = false; render(); } };
+      schTools.appendChild(reset);
+    }
+  }
+  if (edited && !schNote.textContent) {
+    schNote.textContent = "Расписание с вашими правками. Они хранятся в этом браузере, поверх schedule.json.";
+    schNote.hidden = false;
+  }
+}
+render();
+
+/* ── Страницы курсов Moodle ─────────────────────────────────────────────────
+   Календарь Moodle знает только про активности со сроком. «К практике
+   подготовьте темы…» преподаватель пишет текстом в блоке недели — и на
+   дашборде этого не было, пока читались одни дедлайны. Теперь страница курса
+   читается целиком (sections.py), а здесь показывается её текущая неделя. */
+const MOD_TYPES = { label: "", assign: "Задание", quiz: "Тест", resource: "Файл", folder: "Папка",
+  url: "Ссылка", forum: "Форум", page: "Страница", book: "Книга", lesson: "Урок", workshop: "Семинар",
+  attendance: "Посещаемость", choice: "Опрос", feedback: "Опрос", glossary: "Глоссарий", scorm: "SCORM",
+  h5pactivity: "H5P", bigbluebuttonbn: "Онлайн-занятие", videoconference: "Онлайн-занятие" };
+const CLAMP_AT = 420;   // символов: короче — показываем целиком, длиннее — с разворотом
+
+function currentSection(c) {
+  const secs = c.sections || [];
+  return secs.find(s => s.current) || null;
+}
+/* Одна секция одного курса: тексты преподавателя, потом материалы и активности */
+function moodleSection(c, sec, withCourse) {
+  const box = el("div", "mw-c");
+  const h = el("div", "mw-h");
+  if (withCourse) h.appendChild(el("b", null, c.title));
+  h.appendChild(el("span", "sec", sec.name));
+  box.appendChild(h);
+  const texts = [sec.summary, ...sec.items.filter(i => i.type === "label").map(i => i.text)].filter(Boolean);
+  texts.forEach(t => {
+    const d = el("div", "mw-t" + (t.length > CLAMP_AT ? " clamp" : ""), t);
+    box.appendChild(d);
+    if (t.length > CLAMP_AT) {
+      const b = el("button", "mw-more", "развернуть");
+      b.onclick = () => { const open = d.classList.toggle("clamp"); b.textContent = open ? "развернуть" : "свернуть"; };
+      box.appendChild(b);
+    }
+  });
+  sec.items.filter(i => i.type !== "label").forEach(i => {
+    const row = el("div", "mw-i");
+    const kind = MOD_TYPES[i.type] ?? i.type;
+    if (kind) row.appendChild(el("span", "type", kind));
+    const name = i.url ? el("a", null, i.name || i.type) : el("span", null, i.name || i.type);
+    if (i.url) { name.href = i.url; name.target = "_blank"; name.rel = "noopener"; }
+    row.appendChild(name);
+    const when = i.dates.due ? "до " + i.dates.due : i.dates.closes ? "закрывается " + i.dates.closes : "";
+    if (when) row.appendChild(el("span", "m", when));
+    if (i.done) row.appendChild(el("span", "pill " + (i.done === "done" ? "ok" : "warn"),
+                                   i.done === "done" ? "сделано" : "сделать"));
+    if (i.restricted) row.appendChild(el("span", "lock", "🔒 " + i.restricted));
+    box.appendChild(row);
+  });
+  if (!texts.length && !sec.items.length) box.appendChild(el("div", "mw-empty", "В этой неделе пока пусто."));
+  return box;
+}
+{
+  const card = document.getElementById("moodleWeek");
+  const body = document.getElementById("moodleWeekBody");
+  const withSections = DATA.courses.filter(c => (c.sections || []).length);
+  if (withSections.length) {
+    card.hidden = false;
+    let shown = 0;
+    withSections.forEach(c => {
+      const sec = currentSection(c);
+      if (sec) { body.appendChild(moodleSection(c, sec, true)); shown++; }
+    });
+    document.getElementById("moodleWeekLbl").textContent =
+      shown ? shown + " " + plural(shown, "курс", "курса", "курсов") : "текущая неделя не отмечена";
+    if (!shown) body.appendChild(el("div", "mw-empty", "Ни в одном курсе неделя не помечена как текущая."));
+  }
+}
+
+/* ── Сделать в Moodle ───────────────────────────────────────────────────────
+   В «Заданиях» выше только то, у чего есть срок в календаре Moodle. А тест
+   без даты закрытия, папка «Practice classes 1-3» с инструкциями, форум —
+   тоже обязательны, но в календарь не попадают. Здесь всё содержимое всех
+   недель всех курсов, кроме текстов, — и отметка Moodle «сделано / надо
+   сделать», если преподаватель включил отслеживание. Не включил — так и
+   пишем: «нет отметки», а не выдумываем статус. */
+{
+  const card = document.getElementById("moodleTodo");
+  const rows = [];
+  DATA.courses.forEach((c, ci) => {
+    const secs = c.sections || [];
+    const cur = (secs.find(s => s.current) || {}).n;
+    secs.forEach(sec => sec.items.forEach(i => {
+      if (i.type === "label" || !i.name) return;
+      const phase = cur === undefined ? "cur" : sec.n < cur ? "past" : sec.n === cur ? "cur" : "next";
+      rows.push(Object.assign({}, i, { course: c.title, code: c.code || "", sec, ci, phase }));
+    }));
+  });
+  rows.sort((a, b) => a.sec.n - b.sec.n || a.ci - b.ci);
+  if (rows.length) {
+    card.hidden = false;
+    const TODO_FILTERS = [
+      { id: "todo", name: "Сделать", f: r => r.done !== "done" },
+      { id: "done", name: "Сделано", f: r => r.done === "done" },
+      { id: "all", name: "Всё", f: () => true },
+    ];
+    let active = "todo";
+    const tabs = document.getElementById("todoTabs");
+    const body = document.getElementById("todoRows");
+    const pillOf = r => {
+      if (r.done === "done") return ["ok", "сделано"];
+      if (!r.done) return ["mute", "нет отметки"];
+      return r.phase === "past" ? ["bad", "не сделано"] : r.phase === "cur" ? ["warn", "сделать"] : ["mute", "впереди"];
+    };
+    function drawTodo() {
+      const f = TODO_FILTERS.find(x => x.id === active);
+      body.textContent = "";
+      const list = rows.filter(f.f);
+      if (!list.length) {
+        const tr = el("tr"), td = el("td", "empty", "Ничего нет — это хорошая новость.");
+        td.colSpan = 5; tr.appendChild(td); body.appendChild(tr); return;
+      }
+      list.forEach(r => {
+        const tr = el("tr");
+        const st = el("td"); const [k, t] = pillOf(r);
+        st.appendChild(el("span", "pill " + k, t)); tr.appendChild(st);
+        const wk = el("td"); wk.appendChild(el("span", "num", r.sec.name));
+        if (r.phase === "cur" && r.sec.current) wk.appendChild(el("div", "t-sub", "эта неделя"));
+        tr.appendChild(wk);
+        const ti = el("td");
+        const name = el("div", "t-title");
+        if (r.url) { const a = el("a", null, r.name); a.href = r.url; a.target = "_blank"; a.rel = "noopener"; name.appendChild(a); }
+        else name.textContent = r.name;
+        ti.appendChild(name);
+        const when = r.dates.due ? "до " + r.dates.due : r.dates.closes ? "закрывается " + r.dates.closes : "";
+        if (when) ti.appendChild(el("div", "t-sub", when));
+        if (r.restricted) ti.appendChild(el("div", "t-sub", "🔒 " + r.restricted));
+        tr.appendChild(ti);
+        const cs = el("td");
+        const w = el("span", "crs"); w.appendChild(el("i", "dot"));
+        const nm = el("span", null, r.code || r.course); nm.title = r.course; w.appendChild(nm);
+        cs.appendChild(w); tr.appendChild(cs);
+        const tp = el("td"); tp.appendChild(el("span", "type", MOD_TYPES[r.type] || r.type)); tr.appendChild(tp);
+        body.appendChild(tr);
+      });
+    }
+    TODO_FILTERS.forEach(f => {
+      const b = el("button", "tab" + (f.id === active ? " on" : ""));
+      b.type = "button";
+      b.appendChild(document.createTextNode(f.name));
+      b.appendChild(el("span", "c", String(rows.filter(f.f).length)));
+      b.onclick = () => { active = f.id; [...tabs.children].forEach(x => x.classList.remove("on")); b.classList.add("on"); drawTodo(); };
+      tabs.appendChild(b);
+    });
+    drawTodo();
+  }
+}
+
+/* ── Силлабус ───────────────────────────────────────────────────────────────
+   Состав работ и веса написаны в силлабусе задолго до того, как преподаватель
+   заведёт задание в Moodle. Здесь только показываем — и обязательно с пометкой,
+   откуда взято: это план курса, а не выставленный дедлайн, и путать их нельзя.
+   Сроки в силлабусе — номера недель; даты им даёт академический календарь
+   (week1 — первый день теоретического обучения).
+
+   Страница живёт в двух режимах: все предметы разом — и один выбранный. Во
+   втором появляется «к следующему занятию»: преподаватели просят приходить
+   подготовленными по темам из силлабуса, и здесь эти темы, чтение и задания
+   на практику собраны для этой и следующей недели. */
+const SYL = DATA.syllabus || {};
+const sylCourses = Object.entries(SYL.courses || {});
+const week1 = SYL.week1 ? new Date(SYL.week1 + "T00:00:00") : null;
+const curWeek = week1 ? Math.floor((today - week1) / 864e5 / 7) + 1 : null;
+const PERIOD_LBL = { "1": "1-я аттестация · РК1", "2": "2-я аттестация · РК2", "final": "Экзамен · ×0,4" };
+const PERIOD_SHORT = { "1": "РК1", "2": "РК2", "final": "экзамен" };
+
+/* Неделя n — это Пн–Сб: у AITU шестидневка, и окна РК в календаре тоже Пн–Сб */
+function weekSpan(n) {
+  if (!week1 || !n) return "";
+  const a = new Date(week1); a.setDate(a.getDate() + (n - 1) * 7);
+  const b = new Date(a); b.setDate(b.getDate() + 5);
+  return a.getDate() + (a.getMonth() === b.getMonth() ? "" : " " + MONTHS[a.getMonth()].slice(0, 3))
+    + "–" + b.getDate() + " " + MONTHS[b.getMonth()].slice(0, 3);
+}
+/* Midterm/endterm без номера недели — в окно рубежного контроля: оно общее для
+   всего университета, а не выдумка. Помечаем, что неделя из календаря. */
+function itemWeek(i) {
+  if (i.week) return { n: i.week, byCal: false };
+  const rk = (SYL.rk_weeks || {})[i.kind];
+  return rk ? { n: rk, byCal: true } : null;
+}
+const listOf = (title, items) => {
+  const box = el("div");
+  box.appendChild(el("div", "h4", title));
+  const ul = el("ul"); items.forEach(x => ul.appendChild(el("li", null, x))); box.appendChild(ul);
+  return box;
+};
+
+/* Выбор предмета. Запоминаем в localStorage: это удобство одного браузера,
+   и если хранилище недоступно — просто открываем «все». */
+let sylPick = "";
+try { sylPick = localStorage.getItem("syl-pick") || ""; } catch (e) {}
+if (sylPick && !SYL.courses?.[sylPick]) sylPick = "";
+const tabsBox = document.getElementById("sylTabs");
+function drawTabs() {
+  tabsBox.replaceChildren();
+  if (!sylCourses.length) return;
+  [["", "Все предметы"], ...sylCourses.map(([c]) => [c, c])].forEach(([id, name]) => {
+    const b = el("button", "tab" + (id === sylPick ? " on" : ""), name);
+    b.onclick = () => { sylPick = id; try { localStorage.setItem("syl-pick", id); } catch (e) {}
+      drawSyl(); window.scrollTo({ top: 0 }); };
+    tabsBox.appendChild(b);
+  });
+}
+
+/* Одна неделя курса в карточке «к следующему занятию» */
+function prepWeek(w, label, isNext) {
+  const box = el("div", "prep-w" + (isNext ? " next" : ""));
+  box.appendChild(el("div", "k", label + " · неделя " + w.n + " · " + weekSpan(w.n)));
+  box.appendChild(el("h3", null, w.topic));
+  if ((w.subtopics || []).length) box.appendChild(listOf("Темы", w.subtopics));
+  if ((w.reading || []).length) box.appendChild(listOf("Прочитать / посмотреть", w.reading));
+  if ((w.practice || []).length) box.appendChild(listOf("На практике", w.practice));
+  if ((w.events || []).length) {
+    const ev = el("div", "ev"); w.events.forEach(e => ev.appendChild(el("span", "type", e))); box.appendChild(ev);
+  }
+  return box;
+}
+
+const soon = document.getElementById("sylSoon");
+const prepCard = document.getElementById("sylPrep");
+const sylBox = document.getElementById("syllabus");
+
+function drawSyl() {
+  drawTabs();
+  const picked = sylPick ? SYL.courses[sylPick] : null;
+  /* Список «ближайшее» нужен, когда предметов много; у одного предмета те же
+     строки с неделями уже есть в его карточке. */
+  soon.closest(".card").hidden = !!picked;
+
+  /* «К следующему занятию» — только для выбранного предмета */
+  prepCard.hidden = !picked;
+  if (picked) {
+    const body = document.getElementById("sylPrepBody");
+    body.replaceChildren();
+    const byN = n => (picked.weeks || []).find(w => w.n === n);
+    const thisW = curWeek >= 1 && curWeek <= 10 ? byN(curWeek) : null;
+    const nextN = curWeek < 1 ? 1 : curWeek + 1;
+    const nextW = nextN <= 10 ? byN(nextN) : null;
+    document.getElementById("sylPrepLbl").textContent = !week1 ? "" : curWeek < 1 ? "триместр ещё не начался"
+      : curWeek > 10 ? "учебные недели закончились" : "неделя " + curWeek + " из 10";
+    if (thisW) body.appendChild(prepWeek(thisW, "Эта неделя", false));
+    if (nextW) body.appendChild(prepWeek(nextW, "Следующая — готовься", true));
+    if (!thisW && !nextW) body.appendChild(el("div", "prep-note", "Учебные недели прошли — дальше экзамен."));
+    if (picked.prep_note) body.appendChild(el("div", "prep-note", picked.prep_note));
+    /* Курс Moodle к предмету — по названию: «Sociology | Anel Nurkanat» ⊇ «Sociology» */
+    const mbox = document.getElementById("sylMoodle"); mbox.replaceChildren();
+    const key = sylPick.toLowerCase();
+    const mc = DATA.courses.find(c => { const t = (c.title || "").toLowerCase(); return t.includes(key) || key.includes(t); });
+    const msec = mc && currentSection(mc);
+    if (msec) {
+      const lbl = el("div", "eyebrow", "в Moodle сейчас"); lbl.style.cssText = "padding:10px 14px 0"; mbox.appendChild(lbl);
+      mbox.appendChild(moodleSection(mc, msec, false));
+    }
+  }
+
+  /* Ближайшее: всё с известной неделей, начиная с текущей */
+  soon.replaceChildren();
+  const upcoming = [];
+  sylCourses.filter(([c]) => !sylPick || c === sylPick).forEach(([course, c]) =>
+    Object.entries(c.periods || {}).forEach(([per, items]) => items.forEach(i => {
+      const w = itemWeek(i); if (w && w.n >= (curWeek || 1)) upcoming.push({ ...i, course, per, w });
+    })));
+  upcoming.sort((a, b) => a.w.n - b.w.n || b.points - a.points);
+  document.getElementById("sylLbl").textContent = !week1 ? ""
+    : curWeek < 1 ? "триместр ещё не начался" : curWeek > 10 ? "учебные недели закончились" : "неделя " + curWeek + " из 10";
+  if (!sylCourses.length) {
+    const hint = el("div", null, "Силлабусов пока нет.");
+    hint.style.cssText = "font-size:13px;color:var(--ink-2)";
+    const how = el("div", "t-sub", 'Положи файл рядом и выполни: python rubezh.py syllabus "Syllabus.pdf" '
+      + '--course "Discrete Mathematics" — разбор идёт локальной моделью, наружу файл не уходит. '
+      + 'Сканы модель не прочтёт: их придётся вписать в syllabus.json руками.');
+    how.style.marginTop = "6px";
+    soon.appendChild(hint); soon.appendChild(how);
+  } else if (!upcoming.length) {
+    soon.appendChild(el("div", "t-sub", "По силлабусу всё уже позади — дальше только сессия."));
+  } else {
+    upcoming.slice(0, 12).forEach(i => {
+      const row = el("div", "date-row" + (i.w.n === curWeek ? " now" : ""));
+      row.appendChild(el("div", "d", "нед. " + i.w.n));
+      const t = el("div", "t");
+      t.appendChild(el("div", "t-title", i.name));
+      t.appendChild(el("div", "t-sub", i.course + " · " + i.points + " из 100 за " + PERIOD_SHORT[i.per]
+        + (i.w.byCal ? " · неделя по календарю РК" : "")));
+      row.appendChild(t);
+      row.appendChild(el("div", "n", weekSpan(i.w.n)));
+      soon.appendChild(row);
+    });
+  }
+
+  /* Карточки курсов: в режиме одного предмета остаётся одна, во всю ширину, с раскрытым планом */
+  sylBox.style.gridTemplateColumns = sylPick ? "1fr" : "";
+  sylBox.querySelectorAll(".card").forEach(card => {
+    const mine = !sylPick || card.dataset.course === sylPick;
+    card.hidden = !mine;
+    const plan = card.querySelector("details.plan-d");
+    if (plan && sylPick) plan.open = true;
+  });
+}
+
+/* Карточка курса: та же шапка, что у курсов Moodle, дальше — баллы, план, правила */
+sylCourses.forEach(([course, c]) => {
+  const card = el("div", "card");
+  card.dataset.course = course;
+  const h = el("div", "cr-h");
+  const left = el("div");
+  const meta = [c.code, c.credits ? c.credits + " кр." : null, c.year].filter(Boolean).join(" · ");
+  if (meta) left.appendChild(el("div", "code", meta));
+  left.appendChild(el("h3", null, course));
+  const who = (c.instructors || []).map(p => p.name);
+  if (who.length) left.appendChild(el("div", "who",
+    who.slice(0, 2).join(", ") + (who.length > 2 ? " и ещё " + (who.length - 2) : "")));
+  h.appendChild(left);
+  card.appendChild(h);
+
+  /* Баллы. У записи от модели периодов нет — только плоский список с весами */
+  const tw = el("div", "tw");
+  const table = el("table");
+  const tb = el("tbody");
+  const periods = c.periods ? Object.entries(c.periods) : [["", c.items || []]];
+  periods.forEach(([per, items]) => {
+    if (per) {
+      const tr = el("tr", "per"); const td = el("td", null, PERIOD_LBL[per] || per);
+      td.colSpan = 3; tr.appendChild(td); tb.appendChild(tr);
+    }
+    items.forEach(i => {
+      const w = itemWeek(i);
+      const tr = el("tr", w && w.n === curWeek ? "now" : "");
+      const pts = i.points !== undefined ? i.points : i.weight;
+      tr.appendChild(el("td", "pts", pts === null || pts === undefined ? "—" : String(pts)));
+      const td = el("td");
+      td.appendChild(el("div", "t-title", i.name));
+      if (i.form || i.note) td.appendChild(el("div", "t-sub", i.form || i.note));
+      tr.appendChild(td);
+      tr.appendChild(el("td", "swk", i.due ? fmt(i.due)
+        : w ? "нед. " + w.n + (w.byCal ? "*" : "") + " · " + weekSpan(w.n) : ""));
+      tb.appendChild(tr);
+    });
+  });
+  table.appendChild(tb); tw.appendChild(table); card.appendChild(tw);
+  if (c.formula) {
+    const byCal = Object.values(c.periods || {}).flat().some(i => { const w = itemWeek(i); return w && w.byCal; });
+    card.appendChild(el("div", "src", "Итог = " + c.formula + (byCal ? " · * неделя из календаря РК" : "")));
+  }
+
+  if ((c.weeks || []).length) {
+    const d = el("details", "plan-d"); d.appendChild(el("summary", null, "План по неделям"));
+    const plan = el("div", "plan");
+    c.weeks.forEach(w => {
+      const row = el("div", "wkrow" + (w.n === curWeek ? " now" : ""));
+      row.appendChild(el("div", "n", String(w.n)));
+      row.appendChild(el("div", "d", weekSpan(w.n)));
+      const t = el("div"); t.appendChild(el("div", null, w.topic));
+      if ((w.subtopics || []).length) t.appendChild(el("div", "sub", w.subtopics.join(" · ")));
+      if ((w.events || []).length) {
+        const ev = el("div", "ev");
+        w.events.forEach(e => ev.appendChild(el("span", "type", e)));
+        t.appendChild(ev);
+      }
+      row.appendChild(t); plan.appendChild(row);
+    });
+    if ((c.sis || []).length) {
+      const lbl = el("div", "eyebrow", "самостоятельная работа (SIS)");
+      lbl.style.margin = "10px 0 4px"; plan.appendChild(lbl);
+      const ul = el("ul", "rules"); ul.style.padding = "0 0 0 16px";
+      c.sis.forEach(x => ul.appendChild(el("li", null, x)));
+      plan.appendChild(ul);
+    }
+    d.appendChild(plan); card.appendChild(d);
+  }
+  if ((c.books || []).length) {
+    const d = el("details"); d.appendChild(el("summary", null, "Литература"));
+    const ul = el("ul", "rules");
+    c.books.forEach(x => ul.appendChild(el("li", null, x)));
+    d.appendChild(ul); card.appendChild(d);
+  }
+  if ((c.rules || []).length) {
+    const d = el("details"); d.appendChild(el("summary", null, "Правила курса"));
+    const ul = el("ul", "rules");
+    c.rules.forEach(x => ul.appendChild(el("li", null, x)));
+    d.appendChild(ul); card.appendChild(d);
+  }
+  if ((c.instructors || []).length) {
+    const d = el("details");
+    d.appendChild(el("summary", null, "Преподаватели · " + c.instructors.length));
+    const list = el("div", "who-list");
+    c.instructors.forEach(p => {
+      const row = el("div");
+      row.appendChild(el("div", null, p.name + (p.role ? " — " + p.role : "")));
+      const m = [p.email, p.office, p.hours].filter(Boolean).join(" · ");
+      if (m) row.appendChild(el("div", "m", m));
+      list.appendChild(row);
+    });
+    d.appendChild(list); card.appendChild(d);
+  }
+  card.appendChild(el("div", "src", "Из файла " + (c.source || "")));
+  sylBox.appendChild(card);
 });
+drawSyl();
 
 /* ── Курсы ─────────────────────────────────────────────────────────────── */
 const box = document.getElementById("courses");
@@ -775,7 +1660,15 @@ DATA.courses.forEach(c => {
   }
 
   const r = el("div", "risks");
-  r.appendChild(gate("Посещаемость", e.attendance, 70, "%"));   // тот же светофор, что и наверху
+  /* Пока не было ни одного отмеченного занятия, посещаемости нет вовсе — и это
+     не ноль: ноль в этом светофоре читается как «до экзамена не допустят». */
+  if (e.attendance === null || e.attendance === undefined) {
+    const none = el("div", "risk");
+    none.appendChild(el("span", null, "Посещаемость — занятий ещё не отмечали"));
+    r.appendChild(none);
+  } else {
+    r.appendChild(gate("Посещаемость", e.attendance, 70, "%"));  // тот же светофор, что и наверху
+  }
   e.risks.forEach(x => {
     const row = el("div", "risk");
     row.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3zM12 10v4M12 17h.01"/></svg>';

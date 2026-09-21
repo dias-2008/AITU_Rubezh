@@ -20,7 +20,9 @@ from pathlib import Path
 
 import requests
 
-ROOT = Path(__file__).parent
+import paths
+
+ROOT = paths.ROOT
 SECRETS = ROOT / "secrets.json"
 SESSIONS = ROOT / ".sessions"
 

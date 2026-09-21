@@ -1,0 +1,59 @@
+# Сборка установщика Windows на тег вида v0.9.0 (или вручную из Actions).
+# Результат — AITU-Rubezh-Setup-<версия>.exe в GitHub Releases.
+#
+# Установщик не подписан: у Windows SmartScreen на него будет «Windows защитила
+# ваш компьютер» → «Подробнее» → «Выполнить в любом случае». Подпись стоит
+# денег; пока живём так и объясняем это в README.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Зависимости
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r rubezh/requirements.txt -r tg-digest/requirements.txt -r installer/requirements-build.txt
+
+      - name: Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Версия
+        id: ver
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=$(cat VERSION)-dev" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Собрать
+        run: python installer/build.py --version ${{ steps.ver.outputs.version }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AITU-Rubezh-Setup
+          path: installer/out/*.exe
+
+      - name: Релиз
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: installer/out/*.exe
+          generate_release_notes: true

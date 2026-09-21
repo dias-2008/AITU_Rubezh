@@ -1,5 +1,6 @@
 """AITU Rubezh — дашборд студента AITU. Точка входа.
 
+    python rubezh.py setup            мастер первого запуска: всё ниже по шагам
     python rubezh.py login lms        логин в Moodle (один раз)
     python rubezh.py login outlook    логин в Outlook (один раз)
     python rubezh.py status           живы ли сессии
@@ -13,7 +14,11 @@
     python rubezh.py serve --lan      ... и открыть для телефона в этой же сети
     python rubezh.py telegram         запомнить, кому слать уведомления
     python rubezh.py telegram --chat-id <id>   указать получателя явно
+    python rubezh.py syllabus <файл>  вынуть задания и веса из силлабуса
+    python rubezh.py sections         что лежит в курсах Moodle по неделям
     python rubezh.py watch [--dry]    проверить изменения и написать в Telegram
+    python rubezh.py schedule         проверять раз в час самому
+    python rubezh.py unregister       снять схему rubezh:// и задачу планировщика
 """
 import json
 import os
@@ -24,16 +29,17 @@ from pathlib import Path
 
 NL = chr(10)
 
+import paths                      # до session: выставляет путь к Chromium
 import session
 
-SECRETS = Path(__file__).parent / "secrets.json"
-LOCK = Path(__file__).parent / ".sessions" / "protocol.lock"
+SECRETS = paths.ROOT / "secrets.json"
+LOCK = paths.ROOT / ".sessions" / "protocol.lock"
 LOCK_STALE_SEC = 15 * 60          # заведомо дольше окна входа (10 минут)
 
 
 def _log(line):
     """Одна строка в watch.log — туда же, куда пишет фоновая проверка."""
-    log = Path(__file__).parent / "watch.log"
+    log = paths.ROOT / "watch.log"
     try:
         with log.open("a", encoding="utf-8") as handle:
             handle.write(f"{time.strftime('%Y-%m-%d %H:%M')}  вход: {line}{NL}")
@@ -96,6 +102,52 @@ def cmd_probe(_args):
             print(error, file=sys.stderr)
             return 1
         moodle.probe(client)
+    return 0
+
+
+def cmd_sections(args):
+    """Показать, что читается со страниц курсов: секции, тексты, материалы.
+
+        python rubezh.py sections            только текущая неделя каждого курса
+        python rubezh.py sections --all      все секции
+
+    Это то, чего нет в календаре Moodle: «подготовьте к семинару…» текстом в
+    блоке недели. Заодно проверка парсера: если вёрстка курса изменилась, тут
+    это видно сразу, а не через пропущенный семинар. Маркер перед активностью —
+    отметка Moodle о выполнении: ✓ сделано, ☐ надо сделать, • отслеживания нет.
+    """
+    import fast
+    import sections
+    try:
+        courses, _ = fast.moodle_snapshot()
+    except fast.Stale as error:
+        raise SystemExit(f"Сессия Moodle не живая ({error}): python rubezh.py login lms")
+    if not courses:
+        print("В Moodle пока нет курсов.")
+        return 0
+    for cid, title in courses.items():
+        print(NL + f"== {title}")
+        try:
+            secs = sections.read(cid)
+        except Exception as error:
+            print(f"   не прочитался: {str(error)[:120]}")
+            continue
+        for sec in secs:
+            if "--all" not in args and not sec["current"]:
+                continue
+            print(f"-- {sec['name']}" + ("   [текущая]" if sec["current"] else ""))
+            if sec["summary"]:
+                print("   " + sec["summary"][:300].replace(NL, NL + "   "))
+            for item in sec["items"]:
+                if item["type"] == "label":
+                    print("   ¶ " + item["text"][:300].replace(NL, NL + "     "))
+                else:
+                    when = item["dates"].get("due") or item["dates"].get("closes") or ""
+                    mark = {"done": "✓", "todo": "☐"}.get(item["done"], "•")
+                    print(f"   {mark} [{item['type']}] {item['name']}" + (f"  — {when}" if when else "")
+                          + ("  🔒" if item["restricted"] else ""))
+        if "--all" not in args and not any(s["current"] for s in secs):
+            print(f"   секций: {len(secs)}, текущая не помечена — смотри --all")
     return 0
 
 
@@ -182,57 +234,32 @@ def cmd_protocol(args):
 
 
 def cmd_register(_args):
-    """Зарегистрировать схему rubezh:// для текущего пользователя."""
-    import winreg
-    root = Path(__file__).parent.resolve()
-    exe = Path(sys.executable).with_name("pythonw.exe")
-    if not exe.exists():
-        exe = Path(sys.executable)
-    command = f'"{exe}" "{root / "rubezh.py"}" protocol "%1"'
-
-    with winreg.CreateKey(winreg.HKEY_CURRENT_USER, r"Software\Classes\rubezh") as key:
-        winreg.SetValueEx(key, None, 0, winreg.REG_SZ, "URL:AITU Rubezh")
-        winreg.SetValueEx(key, "URL Protocol", 0, winreg.REG_SZ, "")
-    icon = root / "icon.ico"
-    if icon.exists():
-        with winreg.CreateKey(winreg.HKEY_CURRENT_USER,
-                              r"Software\Classes\rubezh\DefaultIcon") as key:
-            winreg.SetValueEx(key, None, 0, winreg.REG_SZ, str(icon))
-    with winreg.CreateKey(winreg.HKEY_CURRENT_USER,
-                          r"Software\Classes\rubezh\shell\open\command") as key:
-        winreg.SetValueEx(key, None, 0, winreg.REG_SZ, command)
-
-    print("Схема rubezh:// зарегистрирована — кнопки «Войти» на дашборде работают.")
+    """Включить кнопки «Войти» на дашборде: ссылки rubezh:// отдаются нам."""
+    import desktop
+    where = desktop.register_protocol()
+    print(f"Схема rubezh:// зарегистрирована ({where}) — кнопки «Войти» на дашборде работают.")
     print("Только для твоей учётной записи, права администратора не нужны.")
-    print(r'Убрать: reg delete HKCU\Software\Classes\rubezh /f')
+    print("Убрать: python rubezh.py unregister")
+    return 0
+
+
+def cmd_unregister(_args):
+    """Снять всё, что оставили register и schedule. Данные не трогает."""
+    import desktop
+    desktop.unregister_protocol()
+    try:
+        desktop.schedule_off(TASK_NAME, TASK_LABEL)
+    except RuntimeError:
+        pass                                  # задачи и не было
+    print("Схема rubezh:// снята, задача планировщика удалена.")
+    print(f"Сессии и ключи остались в {paths.ROOT} — удали папку сам, если нужно.")
     return 0
 
 
 def cmd_shortcut(_args):
-    """Положить ярлык на рабочий стол. Windows."""
-    import subprocess
-    root = Path(__file__).parent.resolve()
-    target, icon = root / "AITU Rubezh.bat", root / "icon.ico"
-    if not target.exists():
-        raise SystemExit(f"Нет {target.name} — запусти из папки проекта.")
-
-    # WindowStyle 7 — свернуть окно консоли: она нужна только чтобы показать
-    # ошибку, если сборка упадёт, а в обычной жизни мелькать не должна.
-    script = (
-        "$d=[Environment]::GetFolderPath('Desktop');"
-        "$l=Join-Path $d 'AITU Rubezh.lnk';"
-        "$s=(New-Object -ComObject WScript.Shell).CreateShortcut($l);"
-        f"$s.TargetPath='{target}';"
-        f"$s.WorkingDirectory='{root}';"
-        + (f"$s.IconLocation='{icon}';" if icon.exists() else "")
-        + "$s.Description='Пересобрать дашборд и открыть в браузере';"
-        "$s.WindowStyle=7;$s.Save();$l"
-    )
-    done = subprocess.run(["powershell", "-NoProfile", "-Command", script],
-                          capture_output=True, text=True)
-    if done.returncode != 0:
-        raise SystemExit(f"Не вышло создать ярлык: {done.stderr.strip()[:300]}")
-    print("Ярлык на рабочем столе создан.")
+    """Положить ярлык на рабочий стол."""
+    import desktop
+    print("Ярлык на рабочем столе создан:", desktop.shortcut())
     return 0
 
 
@@ -257,14 +284,107 @@ def cmd_telegram(args):
     return 0
 
 
+TASK_NAME = "AITU Rubezh"                 # имя задачи в планировщике Windows
+TASK_LABEL = "kz.aitu.rubezh.watch"       # id агента launchd на macOS
+
+
+def cmd_schedule(args):
+    """Проверять изменения раз в час без участия человека.
+
+        python rubezh.py schedule           включить
+        python rubezh.py schedule --off     выключить
+        python rubezh.py schedule --status  посмотреть, стоит ли задача
+
+    Уведомления в Telegram шлёт `watch`, но кто-то должен его запускать. Пока
+    задачи в планировщике нет, проверка идёт только когда её запустят руками —
+    то есть почти никогда, и «новое задание» так и не приходит.
+
+    Как именно — в desktop.py: на Windows это schtasks и запуск без окна
+    консоли, на macOS — агент launchd.
+    """
+    import desktop
+    if "--status" in args:
+        lines = desktop.schedule_status(TASK_NAME, TASK_LABEL)
+        if lines is None:
+            print("Задачи нет — проверка раз в час не настроена.")
+            print("Включить: python rubezh.py schedule")
+            return 1
+        for line in lines:
+            print("  " + line)
+        return 0
+
+    if "--off" in args:
+        try:
+            desktop.schedule_off(TASK_NAME, TASK_LABEL)
+        except RuntimeError as error:
+            print(error)
+            return 1
+        print("Задача удалена — проверок больше не будет.")
+        return 0
+
+    desktop.schedule_on(TASK_NAME, ["watch"], TASK_LABEL)
+    print(f"Готово: «{TASK_NAME}» проверяет изменения раз в час, скрытно.")
+    print("Новый курс, новое задание, перенос срока и протухшая сессия —")
+    print("всё это придёт в Telegram, если там что-то поменялось.")
+    print(NL + "Проверить: python rubezh.py schedule --status")
+    print("Выключить: python rubezh.py schedule --off")
+    return 0
+
+
+def cmd_syllabus(args):
+    """Разобрать силлабус и запомнить, что по нему сдавать.
+
+        python rubezh.py syllabus "Syllabus Calc1.pdf" --course "Calculus 1"
+    """
+    import syllabus
+    files = [a for a in args if not a.startswith("--")]
+    if not files:
+        raise SystemExit("Какой файл разбирать? python rubezh.py syllabus <файл.pdf>")
+
+    course = None
+    if "--course" in args:
+        position = args.index("--course")
+        if position + 1 >= len(args):
+            raise SystemExit("После --course нужно название курса.")
+        course = args[position + 1]
+
+    path = Path(files[0])
+    course = course or path.stem
+    print(f"Читаю {path.name}...")
+    text = syllabus.read(path)
+    print(f"Текста: {len(text)} символов. Разбираю локальной моделью, это небыстро.")
+    items = syllabus.parse(text)
+    if not items:
+        print("Модель не нашла в этом файле ни одной работы.")
+        return 1
+
+    syllabus.save(course, path.name, items)
+    print(f"Курс «{course}»: работ {len(items)}")
+    for item in items:
+        mark = item.get("due") or (f"неделя {item['week']}" if item.get("week") else "срок не указан")
+        weight = f"{item['weight']:g}%" if item.get("weight") else "вес не указан"
+        print(f"  • {item['name'][:60]:62} {weight:>14}  {mark}")
+    print(NL + "Записано в syllabus.json. Появится на странице «Силлабус» после сборки.")
+    import web
+    web.build()
+    return 0
+
+
 def cmd_watch(args):
     import watch
     return watch.run(dry="--dry" in args)
 
 
-COMMANDS = {"open": cmd_open, "shortcut": cmd_shortcut,
-            "protocol": cmd_protocol, "register": cmd_register, "watch": cmd_watch, "telegram": cmd_telegram,
-            "build": cmd_build, "serve": cmd_serve, "login": cmd_login, "status": cmd_status, "probe": cmd_probe, "ics": cmd_ics}
+def cmd_setup(_args):
+    import wizard
+    return wizard.run()
+
+
+COMMANDS = {"setup": cmd_setup, "open": cmd_open, "shortcut": cmd_shortcut, "syllabus": cmd_syllabus,
+            "schedule": cmd_schedule, "protocol": cmd_protocol, "register": cmd_register,
+            "unregister": cmd_unregister, "watch": cmd_watch, "telegram": cmd_telegram,
+            "build": cmd_build, "serve": cmd_serve, "login": cmd_login, "status": cmd_status,
+            "probe": cmd_probe, "ics": cmd_ics, "sections": cmd_sections}
 
 
 def main(argv):
@@ -278,10 +398,20 @@ def main(argv):
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
         sys.stderr.reconfigure(encoding="utf-8")
+    if not argv and paths.FROZEN:
+        argv = ["setup"]          # двойной клик по rubezh.exe — это первый запуск
     if not argv or argv[0] not in COMMANDS:
         print(__doc__)
         return 1
-    return COMMANDS[argv[0]](argv[1:])
+    code = COMMANDS[argv[0]](argv[1:])
+    # Из ярлыка окно консоли свёрнуто и закрывается само; при ошибке — держим,
+    # иначе её никто не увидит (то же делал `if errorlevel 1 pause` в .bat).
+    if code and argv[0] in ("open", "setup") and sys.stdin and sys.stdin.isatty():
+        try:
+            input(NL + "Нажми Enter, чтобы закрыть.")
+        except EOFError:
+            pass
+    return code
 
 
 if __name__ == "__main__":

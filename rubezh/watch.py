@@ -7,10 +7,10 @@
     python rubezh.py watch --dry    посмотреть, что бы отправилось
     python rubezh.py watch          отправить в Telegram
 
-Раз в час через планировщик Windows, скрыто (см. README):
+Раз в час без человека — задачу ставит одна команда (Windows: schtasks,
+macOS: launchd; см. desktop.py):
 
-    schtasks /create /tn "AITU Rubezh" /tr "c:\\Projects\\University\\rubezh\\watch.bat" ^
-             /sc daily /st 09:00
+    python rubezh.py schedule
 """
 import html
 import json
@@ -22,9 +22,11 @@ import fast
 import outlook
 import moodle
 import notify
+import paths
+import sections
 import session
 
-ROOT = Path(__file__).parent
+ROOT = paths.ROOT
 STATE = ROOT / "state.json"
 LOG = ROOT / "watch.log"
 LOG_KEEP = 400          # строк; файл не должен расти бесконечно
@@ -43,7 +45,7 @@ def log(line):
 DEADLINE_LIMIT = 50      # Moodle отвечает ошибкой на limitnum больше 50
 
 # Что вообще должно собираться за прогон — чтобы в логе не было «5 из 4».
-EXPECTED = ("courses", "deadlines", "schedule", "transcript", "mail")
+EXPECTED = ("courses", "deadlines", "notes", "schedule", "transcript", "mail")
 
 
 def _gather(snap, key, fn):
@@ -68,6 +70,27 @@ def _events(snap, events):
         }
 
 
+def _notes(snap):
+    """Тексты и материалы со страниц курсов — то, чего календарь не знает.
+
+    Читаем каждый курс, а не только текущую неделю: преподаватель может
+    дописать в прошлую или заранее выложить следующую. Один упавший курс не
+    должен ронять остальные — но и «собрано» тогда не ставим, иначе его блоки
+    ушли бы как пропавшие.
+    """
+    if "courses" not in snap["collected"]:
+        raise RuntimeError("список курсов не собран — без него блоки не с чем сопоставить")
+    notes, failed = {}, []
+    for cid, title in snap["courses"].items():
+        try:
+            notes.update(sections.digest(cid, title, sections.read(cid)))
+        except Exception as error:
+            failed.append(f"{title}: {str(error)[:80]}")
+    if failed:
+        raise RuntimeError("; ".join(failed))
+    snap["notes"] = notes
+
+
 def _moodle_part(snap):
     """Сначала по HTTP. Браузер поднимаем, только если ключи протухли."""
     try:
@@ -77,6 +100,7 @@ def _moodle_part(snap):
         _events(snap, events)
         snap["collected"] += ["courses", "deadlines"]
         snap.setdefault("via", {})["lms"] = "http"
+        _gather(snap, "notes", lambda: _notes(snap))
         return
     except fast.Stale:
         pass                                  # ключи мертвы — ниже обновим браузером
@@ -102,6 +126,8 @@ def _moodle_part(snap):
         _gather(snap, "courses", courses)
         _gather(snap, "deadlines",
                 lambda: _events(snap, client.deadlines(limit=DEADLINE_LIMIT)))
+        # Куки уже сохранены выше — страницы курсов читаются по HTTP.
+        _gather(snap, "notes", lambda: _notes(snap))
 
 
 def _du_part(snap):
@@ -155,12 +181,15 @@ def _mail_part(snap, old):
     snap["mail"] = [m["title"] for m in messages]
     snap["collected"].append("mail")
 
-    known = set((old or {}).get("mail", []))
-    fresh = [m for m in messages if m["title"] not in known]
-    if fresh and known:            # на первом запуске не разбираем всю историю
+    # Сравниваем с последним удачным чтением почты, а не с прошлым снимком:
+    # снимок мог не дойти до Outlook вовсе, и тогда «новыми» окажутся все письма
+    # подряд либо, наоборот, ни одного.
+    seen = set(known(old).get("mail") or (old or {}).get("mail") or [])
+    fresh = [m for m in messages if m["title"] not in seen]
+    if fresh and seen:             # на первом запуске не разбираем всю историю
         snap["mail_findings"] = outlook.digest(fresh)
     else:
-        snap["mail_findings"] = (old or {}).get("mail_findings", [])
+        snap["mail_findings"] = known(old).get("mail_findings") or (old or {}).get("mail_findings", [])
 
 
 def snapshot(old=None):
@@ -191,9 +220,75 @@ def esc(value):
     return html.escape(str(value), quote=False)
 
 
+# Ключ состояния -> флаг в `collected`, который говорит, что его правда собрали.
+TRACKED = {"courses": "courses", "deadlines": "deadlines", "notes": "notes", "schedule": "schedule",
+           "transcript": "transcript", "mail": "mail", "mail_findings": "mail"}
+
+
+def known(state):
+    """Последнее, что мы ДЕЙСТВИТЕЛЬНО видели, по каждому ключу отдельно."""
+    return dict((state or {}).get("known") or {})
+
+
+def remember(old, new):
+    """Обновить это «последнее виденное» — только по собранным ключам.
+
+    Раньше сравнение шло с предыдущим снимком целиком, и это молча теряло
+    новости. Пока сессия лежала, снимки приходили пустыми; когда она
+    поднималась, новое сравнивать было не с чем (в старом снимке ключ не
+    собран), и сравнение честно пропускалось, чтобы не сыпать «всё пропало».
+    Итог: курсы и задания, появившиеся за время простоя, тихо записывались в
+    состояние как известные — и человек о них не узнавал никогда. Ровно того
+    уведомления, которого ждут, и не приходило.
+
+    Теперь помним последнее удачное чтение каждого ключа отдельно от снимка:
+    простой перестаёт съедать новости, а сравнение по-прежнему не выдумывает
+    пропаж из-за сбоя.
+    """
+    base = known(old)
+    for key, flag in TRACKED.items():
+        if flag in new.get("collected", []):
+            base[key] = new.get(key)
+    return base
+
+
+def nag(old, new):
+    """Напомнить про лежащую сессию — раз в сутки, пока её не поднимут.
+
+    «Сессия протухла» уходит один раз, в момент падения. Дальше проверка молчит,
+    и молчание читается как «ничего нового» — хотя на самом деле это «я ничего
+    не вижу». Пропустил одно сообщение вечером — и неделю не знаешь, что в
+    Moodle появились задания. Поэтому пока сессия лежит, раз в сутки напоминаем,
+    а состояние держим в `down`: когда упала и когда напомнили в последний раз.
+    """
+    lines, down = [], dict((old or {}).get("down") or {})
+    now = datetime.now()
+    for name, title in (("lms", "Moodle"), ("du", "портал")):
+        if new["sessions"].get(name):
+            down.pop(name, None)                # поднялась — забываем
+            continue
+        entry = down.setdefault(name, {"since": now.isoformat(timespec="seconds")})
+        try:
+            since = datetime.fromisoformat(entry["since"])
+            told = datetime.fromisoformat(entry["told"]) if entry.get("told") else since
+        except ValueError:
+            since = told = now
+        days = (now - since).days
+        if days >= 1 and (now - told).total_seconds() >= 20 * 3600:
+            entry["told"] = now.isoformat(timespec="seconds")
+            lines.append(
+                f"🔒 Сессия <b>{title}</b> лежит {days}-й день. Новое оттуда не приходит "
+                f"вообще: <code>python rubezh.py login {name}</code> — или кнопка "
+                f"«Войти» на дашборде."
+            )
+    new["down"] = down
+    return lines
+
+
 def compare(old, new):
     """Человеческие строки об изменениях. Пусто — значит ничего не поменялось."""
     lines, urgent = [], False
+    base = known(old)
 
     for name, title in (("lms", "Moodle"), ("du", "портал"), ("outlook", "Outlook")):
         was = old.get("sessions", {}).get(name)
@@ -209,18 +304,18 @@ def compare(old, new):
     # сбоя ничем не отличается от честного «стало пусто», и без этой проверки
     # любая осечка уходит пользователю как «все курсы пропали».
     def both(key):
-        return key in old.get("collected", []) and key in new.get("collected", [])
+        return key in base and key in new.get("collected", [])
 
     if both("courses"):
-        appeared = set(new["courses"]) - set(old.get("courses", {}))
-        gone = set(old.get("courses", {})) - set(new["courses"])
+        appeared = set(new["courses"]) - set(base.get("courses") or {})
+        gone = set(base.get("courses") or {}) - set(new["courses"])
         for key in sorted(appeared):
             lines.append(f"📚 Новый курс: <b>{esc(new['courses'][key])}</b>")
         for key in sorted(gone):
-            lines.append(f"➖ Курс пропал: {esc(old['courses'][key])}")
+            lines.append(f"➖ Курс пропал: {esc(base['courses'][key])}")
 
     if both("deadlines"):
-        old_dl, new_dl = old.get("deadlines", {}), new["deadlines"]
+        old_dl, new_dl = base.get("deadlines") or {}, new["deadlines"]
         for key in sorted(set(new_dl) - set(old_dl)):
             item = new_dl[key]
             lines.append(f"🆕 Дедлайн: <b>{esc(item['name'])}</b> — {_when(item['when'])}"
@@ -233,22 +328,45 @@ def compare(old, new):
         for key in sorted(set(old_dl) - set(new_dl)):
             lines.append(f"✔️ Больше не висит: {esc(old_dl[key]['name'])}")
 
+    # Блоки на страницах курсов. Ключ — cmid, поэтому видно и новый текст, и
+    # правку старого. Именно так пропадал семинар «подготовьте темы…», у
+    # которого нет срока и которого нет в календаре.
+    if both("notes"):
+        old_n, new_n = base.get("notes") or {}, new["notes"]
+        for key in sorted(set(new_n) - set(old_n)):
+            lines.append(_note_line("📝 Новое в курсе", new_n[key]))
+        for key in sorted(set(new_n) & set(old_n)):
+            if (new_n[key].get("text"), new_n[key].get("name")) != (old_n[key].get("text"), old_n[key].get("name")):
+                lines.append(_note_line("✏️ Изменилось в курсе", new_n[key]))
+
     if both("schedule"):
-        was_sch, now_sch = old.get("schedule"), new.get("schedule")
+        was_sch, now_sch = base.get("schedule"), new.get("schedule")
         if not was_sch and now_sch:
             lines.append(f"🗓 Появилось расписание группы {esc(new.get('group'))}: {now_sch} занятий")
         elif was_sch and now_sch and was_sch != now_sch:
             lines.append(f"🗓 Расписание изменилось: было {was_sch}, стало {now_sch}")
 
     for finding in new.get("mail_findings", []):
-        if finding not in (old.get("mail_findings") or []):
+        if finding not in (base.get("mail_findings") or []):
             lines.append(f"📧 Из почты: {esc(finding)}")
             urgent = True
 
-    if both("transcript") and new.get("transcript") and not old.get("transcript"):
+    if both("transcript") and new.get("transcript") and not base.get("transcript"):
         lines.append("📊 Транскрипт открылся — появились оценки на портале")
 
     return lines, urgent
+
+
+def _note_line(prefix, note):
+    """Одна строка про блок курса: название со ссылкой или начало текста."""
+    where = f"{prefix} <b>{esc(note.get('course'))}</b>, {esc(note.get('section'))}: "
+    if note.get("name"):
+        body = esc(note["name"])
+        if note.get("url"):
+            body = f'<a href="{esc(note["url"])}">{body}</a>'
+        return where + body
+    text = " ".join((note.get("text") or "").split())
+    return where + esc(text[:280] + ("…" if len(text) > 280 else ""))
 
 
 def _when(ts):
@@ -267,6 +385,11 @@ def run(dry=False):
 
     new = snapshot(old)
     lines, urgent = compare(old, new)
+    new["known"] = remember(old, new)   # что видели — помним по ключам, а не снимком
+    reminders = nag(old, new)           # и не молчим, пока сессия лежит
+    if reminders:
+        lines += reminders
+        urgent = True
 
     # Самый первый запуск: сравнивать не с чем, поэтому не сыплем «новый дедлайн»
     # на всё подряд, а один раз сообщаем, что взяли на карандаш.
@@ -305,4 +428,13 @@ def run(dry=False):
 
     if not dry:
         STATE.write_text(json.dumps(new, ensure_ascii=False, indent=2), encoding="utf-8")
+        # Дашборд пересобираем здесь же. Иначе файл на диске остаётся таким,
+        # каким его собрали в прошлый раз: в Telegram приходит «новое задание»,
+        # человек открывает страницу — а там пусто, потому что она недельной
+        # давности. Проверка всё равно уже сходила за данными, это секунды.
+        try:
+            import web
+            web.build()
+        except Exception as error:
+            log(f"дашборд не пересобрался: {str(error)[:120]}")
     return 0

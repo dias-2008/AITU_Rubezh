@@ -13,6 +13,8 @@
 secrets.json
 # config.json: id личных чатов
 config.json
+# schedule.json: расписание твоей группы — где ты бываешь каждую неделю
+schedule.json
 # *.session: university.session — это ПОЛНЫЙ доступ к аккаунту Telegram
 *.session
 *.session-journal
@@ -35,3 +37,17 @@ Thumbs.db
 # Силлабусы и академический календарь — документы AITU, а не наш код.
 # Правила оценивания и даты из них выписаны в README, файлы не нужны.
 *.pdf
+
+# Ярлыки Windows — привязаны к конкретной машине
+*.lnk
+
+# Скриншоты расписания с телефона — личное, в репозиторий не идут
+scheduel/
+
+# venv из install.sh / install.bat
+.venv/
+
+# --- сборка установщика ---------------------------------------------------
+installer/dist/
+installer/build/
+installer/out/

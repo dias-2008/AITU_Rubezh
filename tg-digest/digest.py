@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Дайджест важных сообщений из университетских Telegram-групп.
 
+  python digest.py setup     — мастер: ключи, модель, вход в Telegram, чаты, планировщик
   python digest.py chats     — показать твои группы и их id (для config.json)
   python digest.py run       — собрать новые сообщения, выжать важное, прислать в бота
   python digest.py run --dry — то же самое, но напечатать в консоль и не двигать state
@@ -19,10 +20,11 @@ from telethon import TelegramClient, functions
 
 import llm
 
-ROOT = Path(__file__).parent
-CONFIG_PATH = ROOT / "config.json"
-STATE_PATH = ROOT / "state.json"
-SESSION = str(ROOT / "university")
+ROOT = llm.ROOT
+
+# У каждого человека свой профиль: своя сессия Telegram, свои чаты, свой указатель
+# прочитанного. Общими остаются только код и .env в корне (ключи и токен бота).
+PROFILES = ROOT / "profiles"
 
 INSTRUCTION = """Ты — помощник первокурсника университета. На вход даны новые сообщения из его группы.
 
@@ -72,6 +74,7 @@ INSTRUCTION = """Ты — помощник первокурсника униве
 Сообщения даны в формате «#номер Автор: текст».
 """
 
+NL = chr(10)
 MSG_REF = re.compile(r"#(\d+)")
 
 # Инструкция в начале теряется под сотней сообщений: модель начинает пересказывать чат
@@ -104,6 +107,35 @@ NO_LETTERS = re.compile(r"^[^\w]*$", re.UNICODE)
 
 
 load_env = llm.load_env  # общий ридер .env, чтобы не расходились
+
+
+def _log_to_file(path):
+    """Под планировщиком консоли нет — пишем прогон в digest.log профиля.
+
+    Раньше это делал run.bat с перенаправлением вывода и run_hidden.vbs, чтобы
+    спрятать окно. Теперь задача запускает pythonw / digestw.exe напрямую:
+    у них `sys.stdout` равен None, и всё, что печатается, ушло бы в никуда.
+    """
+    if sys.stdout is not None and sys.stderr is not None:
+        return
+    from datetime import datetime
+    handle = open(path, "a", encoding="utf-8", buffering=1)
+    handle.write(f"========== {datetime.now():%Y-%m-%d %H:%M} ==========" + chr(10))
+    sys.stdout = sys.stdout or handle
+    sys.stderr = sys.stderr or handle
+
+
+def profile_dir(name):
+    """Папка профиля. Создаётся при первом обращении вместе с пустым config.json."""
+    directory = PROFILES / name
+    directory.mkdir(parents=True, exist_ok=True)
+    config = directory / "config.json"
+    if not config.exists():
+        template = json.loads((llm.ASSETS / "config.example.json").read_text(encoding="utf-8"))
+        template["chats"] = []
+        config.write_text(json.dumps(template, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"Создан профиль {name}: {config}", file=sys.stderr)
+    return directory
 
 
 def load_json(path, default):
@@ -200,12 +232,26 @@ def send_to_bot(token, chat_id, text):
             )
 
 
-async def cmd_chats(client):
-    print("\nТвои группы и каналы. Скопируй нужные строки в config.json -> chats:\n")
+async def cmd_chats(client, config_path=None):
+    """Группы и темы, где состоит человек. Печатает и возвращает список.
+
+    Сам список ничего не выбирает: из него берёт строки либо человек руками
+    (в config.json), либо мастер `setup`, который спросит номера.
+    """
+    found = []
+
+    def show(entry):
+        found.append(entry)
+        indent = "      " if "topic_id" in entry else "    "
+        print(f"{indent}{len(found):>3}. {entry['title']}")
+
+    if config_path:
+        print(f"{NL}Твои группы и каналы. Это только список — сам он ничего не выбирает.{NL}"
+              f"Скопируй нужные строки в поле \"chats\" файла:{NL}  {config_path}{NL}")
     async for dialog in client.iter_dialogs():
         if not (dialog.is_group or dialog.is_channel):
             continue
-        print(f'    {{"id": {dialog.id}, "title": {json.dumps(dialog.title, ensure_ascii=False)}}},')
+        show({"id": dialog.id, "title": dialog.title})
 
         # Группа-форум: показываем темы отдельно, чтобы можно было взять только свой курс,
         # а не всё вперемешку с чужими объявлениями.
@@ -221,14 +267,18 @@ async def cmd_chats(client):
             topic_id = getattr(topic, "id", None)
             if topic_id is None:
                 continue
-            name = f"{dialog.title} / {getattr(topic, 'title', '?')}"
-            print(f'      {{"id": {dialog.id}, "topic_id": {topic_id}, '
-                  f'"title": {json.dumps(name, ensure_ascii=False)}}},')
+            show({"id": dialog.id, "topic_id": topic_id,
+                  "title": f"{dialog.title} / {getattr(topic, 'title', '?')}"})
+    if config_path:
+        print(NL + "Строки для config.json:")
+        for entry in found:
+            print("    " + json.dumps(entry, ensure_ascii=False) + ",")
     print()
+    return found
 
 
-async def cmd_run(client, config, dry, fake):
-    state = load_json(STATE_PATH, {})
+async def cmd_run(client, config, state_path, dry, fake):
+    state = load_json(state_path, {})
     max_messages = config.get("max_messages_per_chat", 500)
     max_chars = config.get("max_chars_per_message", 600)
     max_requests = config.get("max_requests_per_run", 20)
@@ -309,27 +359,48 @@ async def cmd_run(client, config, dry, fake):
     if report:
         me = await client.get_me()
         send_to_bot(os.environ["BOT_TOKEN"], me.id, report)
-    STATE_PATH.write_text(json.dumps(new_state, ensure_ascii=False, indent=2), encoding="utf-8")
+    state_path.write_text(json.dumps(new_state, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 async def main():
     parser = argparse.ArgumentParser(description="Дайджест университетских Telegram-групп")
-    parser.add_argument("command", choices=["chats", "run"])
+    parser.add_argument("command", choices=["setup", "chats", "run"])
     parser.add_argument("--dry", action="store_true", help="напечатать в консоль, ничего не отправлять")
     parser.add_argument("--fake", action="store_true",
                         help="не вызывать модель вообще — прогнать сбор и фильтр бесплатно")
+    parser.add_argument("--profile", default="default",
+                        help="чей дайджест: своя сессия, свои чаты, свой прогресс")
     args = parser.parse_args()
 
+    if args.command == "setup":
+        import setup
+        return setup.main(args.profile)
+
+    directory = profile_dir(args.profile)
+    llm.set_usage_log(directory / "usage.log")
+    _log_to_file(directory / "digest.log")
     load_env()
-    client = TelegramClient(SESSION, int(os.environ["TG_API_ID"]), os.environ["TG_API_HASH"])
-    await client.start()
+
+    config = load_json(directory / "config.json", {})
+    if args.command == "run" and not config.get("chats"):
+        sys.exit(f"В профиле {args.profile} не выбраны чаты. Сначала: "
+                 f"python digest.py chats --profile {args.profile}")
+
+    client = TelegramClient(str(directory / "telegram"),
+                            int(os.environ["TG_API_ID"]), os.environ["TG_API_HASH"])
+    await client.connect()
     try:
+        if not await client.is_user_authorized():
+            # Под планировщиком интерактивного входа быть не может: вместо ожидания
+            # ввода телефона и трейсбека говорим человеку, что именно сделать.
+            if args.command == "run":
+                sys.exit(f"Профиль {args.profile} не авторизован в Telegram. Вход делает "
+                         f"владелец аккаунта вручную: python digest.py chats --profile {args.profile}")
+            await client.start()  # телефон, код из Telegram, при необходимости 2FA
         if args.command == "chats":
-            await cmd_chats(client)
+            await cmd_chats(client, directory / "config.json")
         else:
-            if not CONFIG_PATH.exists():
-                sys.exit("Нет config.json — скопируй config.example.json и впиши свои группы.")
-            await cmd_run(client, load_json(CONFIG_PATH, {}), args.dry, args.fake)
+            await cmd_run(client, config, directory / "state.json", args.dry, args.fake)
     finally:
         await client.disconnect()
 
@@ -338,4 +409,4 @@ if __name__ == "__main__":
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
         sys.stderr.reconfigure(encoding="utf-8")
-    asyncio.run(main())
+    sys.exit(asyncio.run(main()))

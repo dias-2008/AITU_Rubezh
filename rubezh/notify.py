@@ -16,11 +16,14 @@ from pathlib import Path
 
 import requests
 
-ROOT = Path(__file__).parent
+import paths
+
+ROOT = paths.ROOT
 SECRETS = ROOT / "secrets.json"
-ENV_FILES = [ROOT / ".env", ROOT.parent / "tg-digest" / ".env"]
+ENV_FILES = [ROOT / ".env", paths.DIGEST / ".env"]
 API = "https://api.telegram.org/bot{token}/{method}"
 LIMIT = 3900          # у Telegram потолок 4096 на сообщение
+NL = chr(10)
 
 
 def load_env():
@@ -43,10 +46,21 @@ def token():
     value = os.environ.get("BOT_TOKEN")
     if not value:
         raise SystemExit(
-            "Нет BOT_TOKEN. Он лежит в ../tg-digest/.env — проверь, что файл на месте, "
-            "или положи BOT_TOKEN в rubezh/.env."
+            "Нет BOT_TOKEN. Запусти мастер: python rubezh.py setup — он спросит токен "
+            "и положит его в rubezh/.env. Или возьмётся из ../tg-digest/.env, если он там."
         )
     return value
+
+
+def save_token(value):
+    """Записать BOT_TOKEN в свой .env, не трогая остальные строки."""
+    path = ENV_FILES[0]
+    lines = path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+    lines = [line for line in lines if not line.strip().startswith("BOT_TOKEN=")]
+    lines.append(f"BOT_TOKEN={value.strip()}")
+    path.write_text(NL.join(lines) + NL, encoding="utf-8")
+    os.environ["BOT_TOKEN"] = value.strip()
+    return path
 
 
 def _secrets():

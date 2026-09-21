@@ -1,7 +1,10 @@
 """Сборка и раздача дашборда.
 
-Дашборд — один самодостаточный HTML-файл: данные вшиваются в него при сборке,
-дальше он работает без сервера. Открывается двойным кликом с диска.
+Дашборд — несколько самодостаточных HTML-файлов рядом: главная и по странице на
+раздел (задания, оценки, расписание, даты, силлабус). Данные вшиваются в них при
+сборке — одним обходом источников на все страницы, — дальше они работают без
+сервера и открываются двойным кликом с диска. Разметка у страниц одна: секции
+помечены `data-page`, лишние прячутся при загрузке.
 
 Почему так, а не веб-приложение: студент ничего не хостит. Файл лежит у него на
 компьютере, как и сессии. Команда `serve` нужна только чтобы открыть дашборд с
@@ -25,11 +28,24 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import grade
+import paths
 
-ROOT = Path(__file__).parent
-TEMPLATE = ROOT / "templates" / "dashboard.html"
+ROOT = paths.ROOT
+TEMPLATE = paths.ASSETS / "templates" / "dashboard.html"
 BUILD = ROOT / "build"
 PLACEHOLDER = "__RUBEZH_DATA__"
+PAGE_PLACEHOLDER = "__RUBEZH_PAGE__"
+
+# Раздел -> файл. Имена должны совпадать со списком PAGES в шаблоне: по ним
+# строится боковое меню, и разъехавшееся имя даст ссылку в никуда.
+PAGES = {
+    "home": "dashboard.html",
+    "tasks": "tasks.html",
+    "grades": "grades.html",
+    "schedule": "schedule.html",
+    "dates": "dates.html",
+    "syllabus": "syllabus.html",
+}
 
 
 def payload(demo=False):
@@ -68,7 +84,7 @@ def payload(demo=False):
     }
 
 
-def fragment(data=None, demo=False):
+def fragment(data=None, demo=False, page="home"):
     """Дашборд без обвязки <html>: title, стили, разметка, скрипт."""
     data = payload(demo) if data is None else data
     body = TEMPLATE.read_text(encoding="utf-8")
@@ -76,7 +92,7 @@ def fragment(data=None, demo=False):
         raise SystemExit(f"В шаблоне нет {PLACEHOLDER} — некуда вставить данные.")
     # </script> внутри строки JSON закрыл бы наш же тег раньше времени.
     blob = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
-    return body.replace(PLACEHOLDER, blob)
+    return body.replace(PLACEHOLDER, blob).replace(PAGE_PLACEHOLDER, page)
 
 
 DOCTYPE = """<!doctype html>
@@ -87,28 +103,41 @@ DOCTYPE = """<!doctype html>
 """
 
 
-def build(demo=False):
-    """Готовый файл, который открывается с диска без всякого сервера.
+def _write(path, data, demo, page):
+    """Одна страница на диск. Замена файла целиком — атомарна.
 
-    Шаблон — фрагмент без <html>: сначала title и стили, потом разметка.
-    Режем его по первому <div class="shell"> — всё до него уезжает в <head>.
+    Пишем через временный файл: пока идёт вход, открытая вкладка перечитывает
+    страницу каждые двадцать секунд и вполне может попасть в середину записи —
+    и показать обрубок вместо дашборда.
     """
-    BUILD.mkdir(exist_ok=True)
-    out = BUILD / "dashboard.html"
     marker = '<div class="shell">'
-    head, found, rest = fragment(demo=demo).partition(marker)
+    head, found, rest = fragment(data, demo, page).partition(marker)
     if not found:
         raise SystemExit(f"В шаблоне нет {marker} — не понять, где кончается head.")
-    # Пишем через временный файл: пока идёт вход, открытая вкладка перечитывает
-    # dashboard.html каждые двадцать секунд и вполне может попасть в середину
-    # записи — и показать обрубок вместо страницы. Замена файла целиком атомарна.
-    tmp = out.with_suffix(".html.tmp")
+    tmp = path.with_suffix(".html.tmp")
     tmp.write_text(
         DOCTYPE + head + "</head>\n<body>\n" + marker + rest + "\n</body>\n</html>\n",
         encoding="utf-8",
     )
-    os.replace(tmp, out)
-    return out
+    os.replace(tmp, path)
+    return path
+
+
+def build(demo=False):
+    """Все страницы дашборда рядом друг с другом, без всякого сервера.
+
+    Разделы — отдельные файлы, а не якоря на одной длинной странице: «Оценки»
+    должно открывать оценки, а не прокручивать. Данные собираются ОДИН раз на
+    все страницы — иначе шесть страниц означали бы шесть обходов Moodle.
+
+    Главная остаётся `dashboard.html`: на неё смотрят ярлык на рабочем столе,
+    обработчик `rubezh://` и открытая вкладка, которая сама перечитывает файл.
+    """
+    BUILD.mkdir(exist_ok=True)
+    data = payload(demo)
+    for page, name in PAGES.items():
+        _write(BUILD / name, data, demo, page)
+    return BUILD / PAGES["home"]
 
 
 def _lan_ip():

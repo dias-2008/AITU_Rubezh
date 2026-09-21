@@ -5,3 +5,4 @@ state.json
 *.session-journal
 __pycache__/
 digest.log
+profiles/

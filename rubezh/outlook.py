@@ -19,11 +19,12 @@ import re
 import sys
 from pathlib import Path
 
+import paths
 import session
 
 # llm.py живёт в соседнем tg-digest и намеренно общий на два инструмента: там уже
 # сделан выбор провайдера с фолбэком, второй такой же слой был бы копией.
-_SHARED = Path(__file__).parent.parent / "tg-digest"
+_SHARED = paths.DIGEST
 if _SHARED.is_dir() and str(_SHARED) not in sys.path:
     sys.path.insert(0, str(_SHARED))
 try:

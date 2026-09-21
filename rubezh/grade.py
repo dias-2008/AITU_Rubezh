@@ -48,9 +48,11 @@ def attestation(items):
     graded = [i for i in items if i.get("score") is not None]
     pending = [i for i in items if i.get("score") is None]
 
+    # У дедлайна из календаря Moodle веса нет вообще (`max: None`) — он про срок,
+    # а не про баллы. В сумме он должен весить ноль, а не ронять расчёт.
     earned = sum(i["score"] for i in graded)
-    graded_max = sum(i["max"] for i in graded)
-    pending_max = sum(i["max"] for i in pending)
+    graded_max = sum(i.get("max") or 0 for i in graded)
+    pending_max = sum(i.get("max") or 0 for i in pending)
 
     return {
         "items": items,
@@ -85,7 +87,17 @@ def required_final(rm, re):
 
 
 def attendance_pct(attendance):
-    if not attendance or not attendance.get("total"):
+    """Проценты посещаемости. Считаем из занятий либо берём готовые.
+
+    Moodle держит посещаемость как оценку 0-100, то есть уже в процентах, и
+    числа занятий не отдаёт вовсе. Пересчитывать «100 из 100 занятий» было бы
+    выдумкой: занятий столько не было.
+    """
+    if not attendance:
+        return None
+    if attendance.get("percent") is not None:
+        return round(float(attendance["percent"]), 1)
+    if not attendance.get("total"):
         return None
     return round(attendance["attended"] / attendance["total"] * 100, 1)
 
@@ -129,7 +141,9 @@ def evaluate(course):
         # Поэтому наружу отдаём и букву потолка — «если сдать всё оставшееся».
         "letter": mark, "gpa": gpa,
         "ceiling_letter": letter(ceiling)[0],
-        "need_re": required_re(rm_score) if not re["complete"] else None,
+        # Совет «нужно 100 за РК2» при неоценённом РК1 — арифметика от нуля,
+        # а не совет: РК1 ещё не выставили, требовать по нему нечего.
+        "need_re": required_re(rm_score) if rm["complete"] and not re["complete"] else None,
         "need_final": required_final(rm_score, re_score) if not final["complete"] else None,
         "risks": risks,
         "hopeless": ceiling < PASS_MARK,
