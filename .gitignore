@@ -13,8 +13,9 @@
 secrets.json
 # config.json: id личных чатов
 config.json
-# schedule.json: расписание твоей группы — где ты бываешь каждую неделю
-schedule.json
+# рабочие копии данных группы; исходник для группы — groups/<группа>/
+rubezh/schedule.json
+rubezh/syllabus.json
 # *.session: university.session — это ПОЛНЫЙ доступ к аккаунту Telegram
 *.session
 *.session-journal
@@ -43,6 +44,9 @@ Thumbs.db
 
 # Скриншоты расписания с телефона — личное, в репозиторий не идут
 scheduel/
+
+# Учебное задание по ICT — не часть проекта
+docs/ict-assignment/
 
 # venv из install.sh / install.bat
 .venv/

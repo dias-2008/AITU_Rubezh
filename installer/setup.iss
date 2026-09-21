@@ -56,6 +56,7 @@ ru.RunDigestSetup=Настроить tg-digest (ключи Telegram, групп�
 ru.SetupShortcut=Настройка {#AppName}
 ru.DigestShortcut=Настройка tg-digest
 ru.OpenDesc=Пересобрать дашборд и открыть в браузере
+ru.GroupData=Я из группы CS-2606: положить расписание и силлабусы группы
 ru.DeleteData=Удалить и данные — сессии Moodle и портала, ключи, собранный дашборд, профили Telegram?%n%nЭто полный доступ к твоим университетским аккаунтам. Если ставишь заново, можно оставить.
 en.DashboardDesc=Dashboard: deadlines, grades, timetable, midterm thresholds
 en.DigestDesc=tg-digest: summary of university Telegram groups
@@ -67,6 +68,7 @@ en.RunDigestSetup=Set up tg-digest (Telegram keys, groups)
 en.SetupShortcut={#AppName} setup
 en.DigestShortcut=tg-digest setup
 en.OpenDesc=Rebuild the dashboard and open it in the browser
+en.GroupData=I am in group CS-2606: install the group's timetable and syllabi
 en.DeleteData=Also delete data — Moodle and portal sessions, keys, the built dashboard, Telegram profiles?%n%nThese give full access to your university accounts. Keep them if you are reinstalling.
 
 [Types]
@@ -80,11 +82,15 @@ Name: "digest"; Description: "{cm:DigestDesc}"; Types: full
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
+Name: "cs2606"; Description: "{cm:GroupData}"; Flags: unchecked
 
 [Files]
 Source: "{#Dist}\*"; DestDir: "{app}"; Excludes: "digest.exe,digestw.exe"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: rubezh
 Source: "{#Dist}\digest.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: digest
 Source: "{#Dist}\digestw.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: digest
+; Данные группы из groups/<группа>/ — только по галочке и только если файлов ещё нет:
+; правки студента в syllabus.json обновление трогать не должно.
+Source: "..\groups\CS-2606\*.json"; DestDir: "{app}\rubezh"; Flags: onlyifdoesntexist uninsneveruninstall; Tasks: cs2606
 
 [Dirs]
 Name: "{app}\rubezh"

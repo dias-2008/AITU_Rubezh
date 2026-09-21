@@ -99,6 +99,37 @@ def step_outlook():
     return session.login("outlook")
 
 
+def step_group():
+    """Расписание и силлабусы группы из groups/<группа>/ — для одногруппников."""
+    import fast
+    if paths.FROZEN:
+        print("Установщик положил данные группы, если ты отметил галочку.")
+        return True
+    groups = sorted(d for d in (paths.APP / "groups").glob("*") if d.is_dir())
+    if not groups:
+        print("Папки groups/ нет — пропускаем.")
+        return False
+    have = [f.name for g in groups for f in g.glob("*.json") if (paths.ROOT / f.name).exists()]
+    if have:
+        print("Уже лежат:", ", ".join(sorted(set(have))))
+        return True
+    mine = fast.secrets().get("du_group") or ""
+    print("В репозитории есть данные групп:", ", ".join(g.name for g in groups))
+    group = next((g for g in groups if g.name.lower() == mine.lower()), None)
+    if group is None:
+        name = _text("Твоя группа (пусто — пропустить): ")
+        group = next((g for g in groups if g.name.lower() == name.lower()), None)
+        if group is None:
+            return False
+    elif not _ask(f"Портал говорит, что ты из {group.name}. Положить расписание и силлабусы?"):
+        return False
+    import shutil
+    for src in group.glob("*.json"):
+        shutil.copy2(src, paths.ROOT / src.name)
+        print("Положил:", src.name)
+    return True
+
+
 def step_shortcut():
     import desktop
     if paths.FROZEN and paths.WINDOWS:
@@ -196,6 +227,7 @@ def run():
         ("Вход в портал AITU", lambda: step_login(
             "du", "Портал", "С портала — имя, группа и расписание.")),
         ("Почта Outlook (по желанию)", step_outlook),
+        ("Расписание и силлабусы группы", step_group),
         ("Ярлык на рабочем столе", step_shortcut),
         ("Кнопка «Войти» на дашборде", step_protocol),
         ("Уведомления в Telegram раз в час", step_telegram),

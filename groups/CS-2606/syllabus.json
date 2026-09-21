@@ -1,0 +1,1957 @@
+{
+  "Introduction to Programming": {
+    "source": "Introduction to programming syllabus.pdf",
+    "at": "2026-09-14",
+    "verified": "hand",
+    "year": "2026-2027",
+    "code": "CODE404",
+    "approved": "28.08.2026, School of Software Engineering",
+    "credits": 5,
+    "hours": {
+      "lectures": 0,
+      "practice": 20,
+      "lab": 30,
+      "iass": 10,
+      "sis": 90,
+      "total": 150
+    },
+    "language": "English",
+    "instructors": [
+      {
+        "name": "Shynar Akhmetzhanova",
+        "role": "Associate Professor",
+        "office": "C1.3.357K",
+        "hours": "Wed 14:00–15:00"
+      },
+      {
+        "name": "Aigerim Kydyrbekova",
+        "role": "Assistant Professor",
+        "office": "C1.3.251K",
+        "hours": "Tue 10:00–12:00"
+      },
+      {
+        "name": "Arailym Orazova",
+        "role": "Senior Lecturer",
+        "office": "C1.3.251K",
+        "hours": "Mon 09:00–11:00"
+      },
+      {
+        "name": "Algys Saltanat",
+        "role": "Senior Lecturer",
+        "office": "C1.3.251K",
+        "hours": "Wed 14:00–16:00"
+      },
+      {
+        "name": "Alshynov Shyngys",
+        "role": "Senior Lecturer",
+        "office": "C1.3.251K",
+        "hours": "Wed 14:00–16:00"
+      },
+      {
+        "name": "Ospan Asanali",
+        "role": "Teacher",
+        "hours": "Sat 14:00–16:00"
+      }
+    ],
+    "formula": "0.3 × Att1 + 0.3 × Att2 + 0.4 × Final",
+    "periods": {
+      "1": [
+        {
+          "name": "Assignment 1 — Basic syntax & if-else",
+          "points": 20,
+          "kind": "assignment",
+          "week": 1,
+          "form": "practical tasks, oral defence"
+        },
+        {
+          "name": "Assignment 2 — Loops",
+          "points": 20,
+          "kind": "assignment",
+          "week": 3,
+          "form": "practical tasks, oral defence"
+        },
+        {
+          "name": "Assignment 3 — One & multi-dimensional arrays",
+          "points": 20,
+          "kind": "assignment",
+          "week": 4,
+          "form": "practical tasks, oral defence"
+        },
+        {
+          "name": "Midterm — quiz (mixed format)",
+          "points": 15,
+          "kind": "midterm",
+          "week": 5,
+          "form": "quiz"
+        },
+        {
+          "name": "Midterm — practical exam",
+          "points": 25,
+          "kind": "midterm",
+          "week": 5,
+          "form": "write and test code independently"
+        }
+      ],
+      "2": [
+        {
+          "name": "Assignment 4 — Functions",
+          "points": 20,
+          "kind": "assignment",
+          "week": 6,
+          "form": "practical tasks, oral defence"
+        },
+        {
+          "name": "Assignment 5 — Pointers & references",
+          "points": 20,
+          "kind": "assignment",
+          "week": 7,
+          "form": "practical tasks, oral defence"
+        },
+        {
+          "name": "Assignment 6 — Structs & Strings",
+          "points": 20,
+          "kind": "assignment",
+          "week": 9,
+          "form": "practical tasks, oral defence"
+        },
+        {
+          "name": "Endterm — quiz (mixed format)",
+          "points": 15,
+          "kind": "endterm",
+          "week": 10,
+          "form": "quiz"
+        },
+        {
+          "name": "Endterm — practical exam",
+          "points": 25,
+          "kind": "endterm",
+          "week": 10,
+          "form": "write and test code independently"
+        }
+      ],
+      "final": [
+        {
+          "name": "Final exam — mixed format quiz in Moodle",
+          "points": 100,
+          "kind": "final",
+          "form": "computer-based test, lms.astanait.edu.kz"
+        }
+      ]
+    },
+    "books": [
+      "[1] Lecture notes on lms.astanait.edu.kz",
+      "[2] Deitel & Deitel — C++ How to Program, 10th ed.",
+      "[3] Bruce Eckel — Thinking in C++, vol. 2 (2004)",
+      "cplusplus.com"
+    ],
+    "prep_note": "Преподаватель просит приходить подготовленным: темы следующего занятия и главы к ним написаны здесь, в силлабусе.",
+    "weeks": [
+      {
+        "n": 1,
+        "topic": "C++ programming basics",
+        "events": [
+          "Assignment 1"
+        ],
+        "subtopics": [
+          "First program",
+          "Variables",
+          "Comments",
+          "Primitive data types",
+          "Operators",
+          "Reading data from console (console input and output)"
+        ],
+        "reading": [
+          "Lecture notes",
+          "Deitel — ch. 1, 2",
+          "Eckel — ch. 1, 2"
+        ],
+        "practice": [
+          "Assignment 1: Programming basics & selection statements"
+        ]
+      },
+      {
+        "n": 2,
+        "topic": "Decision making",
+        "subtopics": [
+          "if selection statement",
+          "if-else",
+          "Nested if",
+          "else if",
+          "switch case",
+          "Ternary operator"
+        ],
+        "reading": [
+          "Deitel — pp. 143–154",
+          "Eckel — pp. 93–104"
+        ]
+      },
+      {
+        "n": 3,
+        "topic": "Loops",
+        "events": [
+          "Assignment 2"
+        ],
+        "subtopics": [
+          "while loop",
+          "do-while loop",
+          "for loop",
+          "break / continue"
+        ],
+        "reading": [
+          "Deitel — ch. 4.8, 5.3–5.5, 5.8, 5.10",
+          "Eckel — pp. 104–121"
+        ],
+        "practice": [
+          "Assignment 2: Iteration statements"
+        ]
+      },
+      {
+        "n": 4,
+        "topic": "Arrays: one-dimensional arrays",
+        "events": [
+          "Assignment 3"
+        ],
+        "subtopics": [
+          "Declaration and initialization",
+          "sizeof operator",
+          "The array name",
+          "Loops and arrays together",
+          "Null-terminated strings (char array)",
+          "Sorting (bubble sort)"
+        ],
+        "reading": [
+          "Eckel — pp. 124–129"
+        ],
+        "practice": [
+          "Assignment 3: One-dimensional and multi-dimensional arrays"
+        ]
+      },
+      {
+        "n": 5,
+        "topic": "Multi-dimensional arrays",
+        "events": [
+          "Midterm"
+        ],
+        "subtopics": [
+          "Array of arrays",
+          "Two-dimensional array",
+          "Nested loops with n-dimensional arrays",
+          "Array of C-style strings"
+        ],
+        "reading": [
+          "Eckel — pp. 130–136"
+        ],
+        "practice": [
+          "Midterm: quiz (mixed format) + practical exam"
+        ]
+      },
+      {
+        "n": 6,
+        "topic": "Functions and arguments, header files",
+        "events": [
+          "Assignment 4"
+        ],
+        "subtopics": [
+          "Functions (return type and void)",
+          "Arguments",
+          "Function prototype",
+          "Function overloading",
+          "Header files"
+        ],
+        "reading": [
+          "Deitel — pp. 251–282, 285–291",
+          "Eckel — pp. 172–187"
+        ],
+        "practice": [
+          "Assignment 4: Functions, void functions, recursion, header files"
+        ]
+      },
+      {
+        "n": 7,
+        "topic": "Pointers and references",
+        "events": [
+          "Assignment 5"
+        ],
+        "subtopics": [
+          "Address operator (&) and dereferencing (*)",
+          "Declaration and initialization",
+          "const with pointers",
+          "Pass by pointer",
+          "Dynamic memory",
+          "Pointer arithmetic",
+          "Explicit dereferencing of an array element"
+        ],
+        "reading": [
+          "Deitel — pp. 379–404"
+        ],
+        "practice": [
+          "Assignment 5: Pointers, dynamic memory, addresses, array of pointers, pointer to function"
+        ]
+      },
+      {
+        "n": 8,
+        "topic": "Pointers and references, part 2",
+        "subtopics": [
+          "Pointer to pointer (multiple dereference)",
+          "Array of pointers",
+          "typedef specifier",
+          "Pointer to function",
+          "Array of pointers to functions"
+        ],
+        "reading": [
+          "Deitel — pp. 404–423"
+        ]
+      },
+      {
+        "n": 9,
+        "topic": "Structs",
+        "events": [
+          "Assignment 6"
+        ],
+        "subtopics": [
+          "Structures in C++",
+          "Array of structures",
+          "Structure pointers",
+          "Nested structures",
+          "Structure functions"
+        ],
+        "reading": [
+          "Eckel — pp. 196–219"
+        ],
+        "practice": [
+          "Assignment 6: Custom data types, structures, array of structures, structure pointers, strings, C-style strings, <string> library"
+        ]
+      },
+      {
+        "n": 10,
+        "topic": "Strings",
+        "events": [
+          "Endterm"
+        ],
+        "subtopics": [
+          "Basics of std::string",
+          "The <string> library",
+          "Iterators"
+        ],
+        "reading": [
+          "Deitel — p. 117, ch. 3.3.3, pp. 488–493, 963–984"
+        ],
+        "practice": [
+          "Endterm: quiz (mixed format) + practical exam"
+        ]
+      }
+    ],
+    "rules": [
+      "Пропуск больше 30% занятий — F, даже со справкой.",
+      "Опоздание больше 5 минут — отсутствие.",
+      "Поздние сдачи не принимаются: за просроченную работу 0.",
+      "Код защищается устно: не смог объяснить решение — работа не принята.",
+      "ИИ — только с явного разрешения преподавателя, иначе плагиат.",
+      "Меньше 25% за любую аттестацию — незачёт.",
+      "Финал — тест в Moodle. Связь: Outlook / Teams, Пн–Пт 08:00–18:00."
+    ]
+  },
+  "Information Communication Technologies": {
+    "source": "Information Communication Technologies syllabus.pdf",
+    "at": "2026-09-14",
+    "verified": "hand",
+    "year": "2026-2027",
+    "code": "IT1115 / IKT 1105",
+    "approved": "28.08.2026, School of Software Engineering",
+    "credits": 5,
+    "hours": {
+      "lectures": 30,
+      "practice": 20,
+      "lab": 0,
+      "iass": 10,
+      "sis": 90,
+      "total": 150
+    },
+    "language": "English",
+    "instructors": [
+      {
+        "name": "Akbota Rakym",
+        "role": "Senior Lecturer",
+        "office": "C3.3.360"
+      },
+      {
+        "name": "Aliya Aubakirova",
+        "role": "Senior Lecturer",
+        "office": "C1.3.360"
+      },
+      {
+        "name": "Botagoz Mirzagalikova",
+        "role": "Senior Lecturer",
+        "office": "C1.3.251"
+      },
+      {
+        "name": "Bauyrzhan Azimbayev",
+        "role": "Teacher",
+        "office": "C1.3.360"
+      },
+      {
+        "name": "Bakyt Bakayeva",
+        "role": "Senior Lecturer",
+        "office": "C1.3.354"
+      },
+      {
+        "name": "Akzharkyn Zholmyrza",
+        "role": "Teacher",
+        "office": "C3.3.360"
+      },
+      {
+        "name": "Zhuldyz Basheyeva",
+        "role": "Assistant Professor",
+        "office": "C1.3.354"
+      },
+      {
+        "name": "Talgat Sembayev",
+        "role": "Assistant Professor",
+        "office": "C1.3.251"
+      },
+      {
+        "name": "Traxel Xeniya",
+        "role": "Teacher",
+        "office": "C1.3.251"
+      },
+      {
+        "name": "Adilet Ormanov",
+        "role": "Senior Lecturer",
+        "office": "C1.3.251"
+      },
+      {
+        "name": "Kamila Tanyrbergenova",
+        "role": "Senior Lecturer",
+        "office": "C1.3.251"
+      },
+      {
+        "name": "Dariya Bissengaliyeva",
+        "role": "Senior Lecturer",
+        "office": "C1.3.357"
+      },
+      {
+        "name": "Daniil Alexandrov",
+        "role": "Teacher",
+        "office": "C1.3.357"
+      },
+      {
+        "name": "Abdurakhim Bakytzhan",
+        "role": "Teacher",
+        "office": "C1.3.251"
+      },
+      {
+        "name": "Diana Kazbekova",
+        "role": "Teacher",
+        "office": "C1.3.354"
+      },
+      {
+        "name": "Madina Yermaganbetova",
+        "role": "Assistant Professor",
+        "office": "C1.3.354"
+      }
+    ],
+    "formula": "0.3 × Att1 + 0.3 × Att2 + 0.4 × Final",
+    "periods": {
+      "1": [
+        {
+          "name": "Assignment 1 — ICT, Computer Systems and Architecture",
+          "points": 25,
+          "kind": "assignment",
+          "week": 2,
+          "form": "practical / project task + defense"
+        },
+        {
+          "name": "Quiz 1",
+          "points": 10,
+          "kind": "quiz",
+          "week": 3,
+          "form": "MCQ quiz"
+        },
+        {
+          "name": "Assignment 2 — Human-Computer Interaction",
+          "points": 25,
+          "kind": "assignment",
+          "week": 4,
+          "form": "practical / project task + defense"
+        },
+        {
+          "name": "Weekly quizzes on learn.astanait",
+          "points": 10,
+          "kind": "quiz",
+          "form": "online test, every week"
+        },
+        {
+          "name": "Midterm — Project Stage 1 (checkpoint)",
+          "points": 30,
+          "kind": "midterm",
+          "week": 5,
+          "form": "individual or team project checkpoint"
+        }
+      ],
+      "2": [
+        {
+          "name": "Assignment 3 — Database systems and Cybersecurity",
+          "points": 25,
+          "kind": "assignment",
+          "week": 6,
+          "form": "practical / project task + defense"
+        },
+        {
+          "name": "Quiz 2",
+          "points": 10,
+          "kind": "quiz",
+          "week": 7,
+          "form": "MCQ quiz"
+        },
+        {
+          "name": "Assignment 4 — Smart technology and Data Analysis",
+          "points": 25,
+          "kind": "assignment",
+          "week": 8,
+          "form": "practical / project task + defense"
+        },
+        {
+          "name": "Weekly quizzes on learn.astanait",
+          "points": 10,
+          "kind": "quiz",
+          "form": "online test, every week"
+        },
+        {
+          "name": "Endterm — Project Stage 2 (prototype / progress)",
+          "points": 30,
+          "kind": "endterm",
+          "week": 9,
+          "form": "presentation"
+        }
+      ],
+      "final": [
+        {
+          "name": "Final project — submission, presentation, individual defense",
+          "points": 100,
+          "kind": "final",
+          "week": 10,
+          "form": "project defense, week 10"
+        }
+      ]
+    },
+    "books": [
+      "Lecture notes on lms.astanait.edu.kz",
+      "Parsons, J. J. — Computer Concepts: Comprehensive, 21st ed. (Cengage, 2022)",
+      "Nurpeisova, T. B., Kaidash, I. N. — Information and Communication Technologies (Bastau, 2017)",
+      "Information and Communication Technologies: Textbook, parts 1–2 (IITU, 2017)"
+    ],
+    "weeks": [
+      {
+        "n": 1,
+        "topic": "Introduction to the course and to ICT",
+        "events": [
+          "Weekly Moodle quiz"
+        ],
+        "subtopics": [
+          "Definition of ICT",
+          "Technology",
+          "ICT in education",
+          "Standards"
+        ],
+        "reading": [
+          "Lecture notes",
+          "Nurpeisova & Kaidash (2017) — introduction"
+        ],
+        "practice": [
+          "Group discussion: «ICT in everyday life and education»"
+        ]
+      },
+      {
+        "n": 2,
+        "topic": "Computer systems and architecture",
+        "events": [
+          "Assignment 1",
+          "Weekly Moodle quiz"
+        ],
+        "subtopics": [
+          "Computers and systems",
+          "System concepts and architecture",
+          "IT system architecture"
+        ],
+        "reading": [
+          "Parsons (2022) — Module 2: Digital Devices",
+          "Nurpeisova & Kaidash — computer systems"
+        ],
+        "practice": [
+          "Identify and describe hardware/software components of a modern computer",
+          "Assignment 1: practical assignment, submission & defense"
+        ]
+      },
+      {
+        "n": 3,
+        "topic": "Software & operating systems; human-computer interaction",
+        "events": [
+          "Quiz 1",
+          "Weekly Moodle quiz"
+        ],
+        "subtopics": [
+          "System software",
+          "Application software",
+          "Introduction to HCI"
+        ],
+        "reading": [
+          "Parsons (2022) — Module 6: Software",
+          "Nurpeisova & Kaidash — software, OS, HCI"
+        ],
+        "practice": [
+          "Compare different operating systems; analyze examples of HCI",
+          "Quiz 1 (MCQ)"
+        ]
+      },
+      {
+        "n": 4,
+        "topic": "Networks and telecommunications",
+        "events": [
+          "Assignment 2",
+          "Weekly Moodle quiz"
+        ],
+        "subtopics": [
+          "Historical perspective",
+          "Network concepts",
+          "Network models: OSI and TCP/IP"
+        ],
+        "reading": [
+          "Parsons (2022) — Module 3: Networks",
+          "Nurpeisova & Kaidash — networks"
+        ],
+        "practice": [
+          "Create a simple network diagram; analyze real-world telecom examples",
+          "Assignment 2: practical assignment, submission & defense"
+        ]
+      },
+      {
+        "n": 5,
+        "topic": "Internet, cloud and mobile technologies",
+        "events": [
+          "Midterm — Project Stage 1",
+          "Weekly Moodle quiz"
+        ],
+        "subtopics": [
+          "Web components",
+          "Web data delivery",
+          "Web languages",
+          "Cloud computing"
+        ],
+        "reading": [
+          "Parsons (2022) — Module 4: The Web",
+          "Nurpeisova & Kaidash — Internet, cloud, mobile"
+        ],
+        "practice": [
+          "Explore a cloud service (Google Drive, OneDrive, iCloud) and compare features",
+          "Midterm: project stage 1 / checkpoint"
+        ]
+      },
+      {
+        "n": 6,
+        "topic": "Database systems",
+        "events": [
+          "Assignment 3",
+          "Weekly Moodle quiz"
+        ],
+        "subtopics": [
+          "Role and advantages of the DBMS",
+          "DBMS functions",
+          "Data models"
+        ],
+        "reading": [
+          "Parsons (2022) — Module 10: Databases",
+          "Nurpeisova & Kaidash — database systems"
+        ],
+        "practice": [
+          "Develop a simple entity-relationship diagram",
+          "Assignment 3: practical assignment, submission & defense"
+        ]
+      },
+      {
+        "n": 7,
+        "topic": "Cybersecurity",
+        "events": [
+          "Quiz 2",
+          "Weekly Moodle quiz"
+        ],
+        "subtopics": [
+          "Cybercrime",
+          "Cybersecurity",
+          "Common threats"
+        ],
+        "reading": [
+          "Parsons (2022) — Module 7: Digital Security",
+          "Nurpeisova & Kaidash — cybersecurity"
+        ],
+        "practice": [
+          "Case study: review a real-world cyberattack and propose prevention measures",
+          "Quiz 2 (MCQ)"
+        ]
+      },
+      {
+        "n": 8,
+        "topic": "Multimedia technologies",
+        "events": [
+          "Assignment 4",
+          "Weekly Moodle quiz"
+        ],
+        "subtopics": [
+          "Multimedia technologies",
+          "Multimedia classifications and systems",
+          "Multimedia file formats"
+        ],
+        "reading": [
+          "Parsons (2022) — Module 1: Digital Content",
+          "Nurpeisova & Kaidash — multimedia"
+        ],
+        "practice": [
+          "Compare image/audio/video formats; create a simple multimedia presentation",
+          "Assignment 4: practical assignment, submission & defense"
+        ]
+      },
+      {
+        "n": 9,
+        "topic": "Smart technology and data analysis",
+        "events": [
+          "Endterm — Project Stage 2",
+          "Weekly Moodle quiz"
+        ],
+        "subtopics": [
+          "IoT",
+          "Smart home",
+          "Smart grid",
+          "Data analysis"
+        ],
+        "reading": [
+          "Nurpeisova & Kaidash — smart technologies, IoT, data analysis",
+          "Lecture materials"
+        ],
+        "practice": [
+          "Project work: analyze how IoT is applied in a real sector (transport, health, education)",
+          "Endterm: project stage 2 — prototype / progress presentation"
+        ]
+      },
+      {
+        "n": 10,
+        "topic": "E-services and IT in the professional sphere",
+        "events": [
+          "Final project",
+          "Weekly Moodle quiz"
+        ],
+        "subtopics": [
+          "E-services",
+          "E-commerce",
+          "E-learning",
+          "E-government",
+          "IT in the professional sphere"
+        ],
+        "reading": [
+          "Parsons (2022) — Module 8: The ICT Industry; Module 9: Information Systems",
+          "Nurpeisova & Kaidash — e-technologies"
+        ],
+        "practice": [
+          "Group project presentations: «ICT impact on industry of choice»",
+          "Final project: submission, presentation and defense"
+        ]
+      }
+    ],
+    "rules": [
+      "Пропуск больше 30% занятий — F, даже со справкой.",
+      "Опоздание больше 5 минут — отсутствие.",
+      "Поздние сдачи не принимаются.",
+      "ИИ — только с явного разрешения преподавателя.",
+      "Меньше 25% за любую аттестацию — незачёт.",
+      "Финал — проект: сдача, презентация и защита на 10-й неделе. Плюс еженедельный квиз на learn.astanait.",
+      "Связь: Outlook / Teams, Пн–Сб 08:00–18:00."
+    ]
+  },
+  "Discrete Mathematics": {
+    "source": "discrete mathematics syllabus(not sure).pdf",
+    "at": "2026-09-14",
+    "verified": "hand",
+    "year": "2025-2026",
+    "code": "DM 1205",
+    "approved": "29.08.2025 (major: Cyber Security)",
+    "credits": 5,
+    "hours": {
+      "lectures": 30,
+      "practice": 20,
+      "lab": 0,
+      "iass": 10,
+      "sis": 90,
+      "total": 150
+    },
+    "language": "English",
+    "instructors": [
+      {
+        "name": "Adilet Duman",
+        "role": "Senior Lecturer",
+        "office": "C1.1.332",
+        "hours": "Fri 15:10–16:00 (online)"
+      }
+    ],
+    "formula": "0.3 × Att1 + 0.3 × Att2 + 0.4 × Final",
+    "periods": {
+      "1": [
+        {
+          "name": "Quiz 1",
+          "points": 20,
+          "kind": "quiz",
+          "week": 3,
+          "form": "paper-based MCQ, 30 min"
+        },
+        {
+          "name": "Classwork assignments (worksheets 1–4)",
+          "points": 10,
+          "kind": "assignment",
+          "form": "solve on the whiteboard, weeks 2–5"
+        },
+        {
+          "name": "Homework assignments 1–4",
+          "points": 10,
+          "kind": "assignment",
+          "form": "video of the solution uploaded to Moodle, weeks 2–5"
+        },
+        {
+          "name": "Lecture quizzes (4 × 5)",
+          "points": 20,
+          "kind": "quiz",
+          "form": "computer-based MCQ after lectures"
+        },
+        {
+          "name": "Midterm exam",
+          "points": 40,
+          "kind": "midterm",
+          "week": 5,
+          "form": "open-ended questions, 50–80 min"
+        }
+      ],
+      "2": [
+        {
+          "name": "Quiz 2",
+          "points": 20,
+          "kind": "quiz",
+          "week": 7,
+          "form": "paper-based MCQ, 30 min"
+        },
+        {
+          "name": "Classwork assignments (worksheets 5–8)",
+          "points": 10,
+          "kind": "assignment",
+          "form": "solve on the whiteboard, weeks 6–9"
+        },
+        {
+          "name": "Homework assignments 5–8",
+          "points": 10,
+          "kind": "assignment",
+          "form": "video of the solution uploaded to Moodle, weeks 6–9"
+        },
+        {
+          "name": "Lecture quizzes (4 × 5)",
+          "points": 20,
+          "kind": "quiz",
+          "form": "computer-based MCQ after lectures"
+        },
+        {
+          "name": "Endterm exam",
+          "points": 40,
+          "kind": "endterm",
+          "week": 10,
+          "form": "open-ended questions, 50–80 min"
+        }
+      ],
+      "final": [
+        {
+          "name": "Final — written exam",
+          "points": 100,
+          "kind": "final",
+          "form": "offline: 20 MCQ tasks, 80 min; online: 8 written tasks in LMS"
+        }
+      ]
+    },
+    "books": [
+      "[1] Goodaire & Parmenter — Discrete Mathematics with Graph Theory, 3rd ed.",
+      "[2] Rosen — Discrete Mathematics and Its Applications, 7th ed.",
+      "Grimaldi — Discrete and Combinatorial Mathematics, 5th ed.",
+      "MIT OCW 6.042J — Mathematics for Computer Science"
+    ],
+    "prep_note": "Порядок из силлабуса: сначала посмотреть, что выложено на сайте; если лекция раньше практики — прийти на лекцию подготовленным, потом решить задачи из Moodle и на практике проверить; если практика раньше — посмотреть лекцию на learn.astanait, решить задачи из Moodle самостоятельно и прийти проверять.",
+    "weeks": [
+      {
+        "n": 1,
+        "topic": "Logic",
+        "subtopics": [
+          "Propositional logic",
+          "Logical operators",
+          "Truth tables",
+          "Applications of propositional logic",
+          "Propositional equivalences",
+          "Disjunctive normal forms"
+        ],
+        "reading": [
+          "Goodaire & Parmenter / Rosen — logic chapters"
+        ]
+      },
+      {
+        "n": 2,
+        "topic": "Sets and relations",
+        "events": [
+          "Classwork 1",
+          "Homework 1"
+        ],
+        "subtopics": [
+          "Set operations",
+          "Venn diagrams",
+          "Binary relations: reflexive, symmetric, anti-symmetric, transitive",
+          "Equivalence relations",
+          "Partial and total orders"
+        ],
+        "practice": [
+          "Classwork 1 (whiteboard)",
+          "Homework 1 (video to Moodle)"
+        ]
+      },
+      {
+        "n": 3,
+        "topic": "Functions",
+        "events": [
+          "Classwork 2",
+          "Homework 2",
+          "Quiz 1"
+        ],
+        "subtopics": [
+          "One-to-one, onto and bijective functions",
+          "Inverse functions",
+          "Composition of functions",
+          "Cardinality of sets"
+        ],
+        "practice": [
+          "Classwork 2",
+          "Homework 2",
+          "Quiz 1 — paper-based MCQ, 30 min"
+        ]
+      },
+      {
+        "n": 4,
+        "topic": "The integers",
+        "events": [
+          "Classwork 3",
+          "Homework 3"
+        ],
+        "subtopics": [
+          "Divisibility and modular arithmetic",
+          "Primes",
+          "Euclidean algorithm and GCD",
+          "Solving congruence relations",
+          "Chinese remainder theorem (Diophantine equations)"
+        ],
+        "practice": [
+          "Classwork 3",
+          "Homework 3"
+        ]
+      },
+      {
+        "n": 5,
+        "topic": "Induction and recursion",
+        "events": [
+          "Classwork 4",
+          "Homework 4",
+          "Midterm"
+        ],
+        "subtopics": [
+          "Mathematical induction",
+          "Recursively defined sequences",
+          "Solving recurrence relations: characteristic polynomials"
+        ],
+        "practice": [
+          "Classwork 4",
+          "Homework 4",
+          "Midterm exam — open-ended, 50–80 min"
+        ]
+      },
+      {
+        "n": 6,
+        "topic": "Principles of counting",
+        "events": [
+          "Classwork 5",
+          "Homework 5"
+        ],
+        "subtopics": [
+          "Principle of inclusion-exclusion",
+          "Sum and product rules",
+          "Pigeonhole principle"
+        ],
+        "practice": [
+          "Classwork 5",
+          "Homework 5"
+        ]
+      },
+      {
+        "n": 7,
+        "topic": "Permutations and combinations",
+        "events": [
+          "Classwork 6",
+          "Homework 6",
+          "Quiz 2"
+        ],
+        "subtopics": [
+          "Permutations and combinations",
+          "Combinations with repetitions",
+          "Binomial theorem"
+        ],
+        "practice": [
+          "Classwork 6",
+          "Homework 6",
+          "Quiz 2 — paper-based MCQ, 30 min"
+        ]
+      },
+      {
+        "n": 8,
+        "topic": "Graphs",
+        "events": [
+          "Classwork 7",
+          "Homework 7"
+        ],
+        "subtopics": [
+          "Definitions and basic properties",
+          "Isomorphism"
+        ],
+        "practice": [
+          "Classwork 7",
+          "Homework 7"
+        ]
+      },
+      {
+        "n": 9,
+        "topic": "Paths and circuits",
+        "events": [
+          "Classwork 8",
+          "Homework 8"
+        ],
+        "subtopics": [
+          "Eulerian circuits",
+          "Hamiltonian cycles",
+          "Adjacency matrix"
+        ],
+        "practice": [
+          "Classwork 8",
+          "Homework 8"
+        ]
+      },
+      {
+        "n": 10,
+        "topic": "Planar graphs and colorings",
+        "events": [
+          "Endterm"
+        ],
+        "subtopics": [
+          "Planar graphs",
+          "Coloring graphs"
+        ],
+        "practice": [
+          "Endterm exam — open-ended, 50–80 min"
+        ]
+      }
+    ],
+    "sis": [
+      "Techniques of proofs — [1] ch. 0",
+      "Algorithms — [1] ch. 8",
+      "Applications of paths and circuits — [1] ch. 11",
+      "Trees — [1] ch. 12",
+      "Max-flow min-cut theorem — [1] ch. 14",
+      "Conjunctive normal form — [2] ch. 1",
+      "Functionally complete systems of logic operators — [2] ch. 1",
+      "Generating functions — [2] ch. 5",
+      "Derangements — [2] ch. 7"
+    ],
+    "rules": [
+      "Пропуск больше 30% без уважительной причины — «не аттестован», к экзамену не допустят.",
+      "Опоздание больше 5 минут — не пускают, отсутствие.",
+      "Поздние сдачи: 0 за работу. Midterm/endterm/final сдвигаются только по договорённости заранее.",
+      "Меньше 25% за любую аттестацию — незачёт.",
+      "Финал: офлайн — 20 тестовых задач, 80 минут; онлайн — 8 письменных задач в LMS.",
+      "Связь — почта; ответ не мгновенный. Офис-часы Пт 15:10–16:00 онлайн."
+    ]
+  },
+  "Psychology": {
+    "source": "Psychology syllabus.pdf",
+    "at": "2026-09-14",
+    "verified": "hand",
+    "year": "2026-2027",
+    "code": "HSS1182 (MSP2313)",
+    "approved": "06.2026, School of General Education Disciplines",
+    "credits": 2,
+    "hours": {
+      "lectures": 10,
+      "practice": 10,
+      "lab": 0,
+      "iass": 10,
+      "sis": 30,
+      "total": 60
+    },
+    "language": "English",
+    "instructors": [
+      {
+        "name": "Assel Issakhanova",
+        "role": "PhD",
+        "office": "C1.1.269"
+      },
+      {
+        "name": "Nursulu Belessova",
+        "role": "PhD candidate",
+        "office": "C1.1.269"
+      },
+      {
+        "name": "Aituar Kospakov",
+        "role": "PhD candidate",
+        "office": "C1.1.269"
+      }
+    ],
+    "formula": "0.3 × Att1 + 0.3 × Att2 + 0.4 × Final",
+    "periods": {
+      "1": [
+        {
+          "name": "Independent study (SIS tasks)",
+          "points": 20,
+          "kind": "assignment",
+          "form": "Graded Assignment 1: online course certificate, week 5"
+        },
+        {
+          "name": "Practice sessions",
+          "points": 40,
+          "kind": "assignment",
+          "form": "in-class tasks, discussions"
+        },
+        {
+          "name": "Midterm exam (quiz)",
+          "points": 40,
+          "kind": "midterm",
+          "week": 5,
+          "form": "quiz on weeks 1–5"
+        }
+      ],
+      "2": [
+        {
+          "name": "Independent study (SIS tasks)",
+          "points": 20,
+          "kind": "assignment",
+          "form": "Graded Assignment 2: online course certificate, week 10"
+        },
+        {
+          "name": "Practice sessions",
+          "points": 40,
+          "kind": "assignment",
+          "form": "in-class tasks, discussions; graded case study in week 9"
+        },
+        {
+          "name": "Endterm exam (quiz)",
+          "points": 40,
+          "kind": "endterm",
+          "week": 10,
+          "form": "quiz on weeks 6–10"
+        }
+      ],
+      "final": [
+        {
+          "name": "Final exam — quiz, offline on campus",
+          "points": 100,
+          "kind": "final",
+          "form": "MCQ, short answer, applied analysis"
+        }
+      ]
+    },
+    "books": [
+      "Myers, D. G., DeWall, C. N. — Psychology, 13th ed. (Macmillan, 2021)",
+      "Spielman, R. M. et al. — Psychology 2e (OpenStax) — openstax.org/books/psychology-2e",
+      "Kirwan, G. et al. — An Introduction to Cyberpsychology, 2nd ed. (Routledge, 2024)",
+      "Schultz, D. P. — Theories of Personality, 11th ed. (Cengage, 2017)",
+      "Video lectures on du.astanait.edu.kz"
+    ],
+    "weeks": [
+      {
+        "n": 1,
+        "topic": "Introduction to Psychology",
+        "events": [
+          "Reading 1 (discussion)"
+        ],
+        "reading": [
+          "Video lecture 1 on DU AITU",
+          "OpenStax Psychology — ch. 1",
+          "Myers & DeWall — ch. 1 «The Story of Psychology»",
+          "Kirwan — section 1: Introduction to Cyberpsychology"
+        ],
+        "practice": [
+          "Meeting — acquaintance, discussion",
+          "Reading 1 discussed in practice"
+        ]
+      },
+      {
+        "n": 2,
+        "topic": "Personality: theories, traits and self-regulation",
+        "subtopics": [
+          "Approaches to studying personality, measurement tools",
+          "Personality traits and the Dark Triad",
+          "Defence mechanisms"
+        ],
+        "reading": [
+          "Video lecture 2",
+          "Schultz — Theories of Personality",
+          "OpenStax — ch. 11: Personality",
+          "Kirwan — section 4: Self and Identity in Cyberspace",
+          "Additional: MBTI & Big5 blogpost"
+        ],
+        "practice": [
+          "Personality assessment (test) and discussion"
+        ]
+      },
+      {
+        "n": 3,
+        "topic": "Motivation and goal-directed behavior",
+        "events": [
+          "Watching & Reading 2: Inside Out, Kross"
+        ],
+        "subtopics": [
+          "Types of motivation",
+          "Techniques to improve motivation",
+          "Motivation in different spheres (education, creative field, leadership, workplace, sport)",
+          "Motivation and procrastination"
+        ],
+        "reading": [
+          "Video lecture 3",
+          "Myers & DeWall — ch. 11: Basic motivational concepts",
+          "Don Norman — The Design of Everyday Things, ch. 2: The Psychology of Everyday Actions",
+          "Video: Tim Urban — Inside the Mind of a Master Procrastinator (TED)",
+          "Additional: Cal Newport — Deep Work"
+        ],
+        "practice": [
+          "Discussion on motivation topics",
+          "Group discussion of Inside Out / Kross «Shift», intro + ch. 1"
+        ]
+      },
+      {
+        "n": 4,
+        "topic": "Emotions and emotional intelligence (EQ)",
+        "events": [
+          "Graded classroom Quiz 1 (weeks 1–4)"
+        ],
+        "reading": [
+          "Video lecture 4",
+          "Myers & DeWall — module: Introduction to Emotion; Expressing and Experiencing Emotions",
+          "Reading: The Importance of Emotional Intelligence",
+          "Additional: HBR — What is Emotional Intelligence (sections 1, 2)"
+        ],
+        "practice": [
+          "Graded classroom Quiz 1 — review weeks 1–4",
+          "Feelings and Emotions Wheel activity",
+          "Emotional Intelligence test"
+        ]
+      },
+      {
+        "n": 5,
+        "topic": "Health psychology and stress management",
+        "events": [
+          "Midterm exam",
+          "Graded Assignment 1: online course"
+        ],
+        "subtopics": [
+          "The importance of mental health",
+          "How we can support each other to overcome stress factors"
+        ],
+        "reading": [
+          "Video lecture 5",
+          "OpenStax — ch. 14: Stress, Lifestyle, and Health",
+          "Myers & DeWall — module: Stress and Illness; Health and Coping",
+          "Kirwan — section 17: Young people and the Internet"
+        ],
+        "practice": [
+          "Midterm exam — review weeks 1–5",
+          "Discussion on mental health",
+          "Graded Assignment 1: screenshot of grades + certificate link (Coursera / Stepik)"
+        ]
+      },
+      {
+        "n": 6,
+        "topic": "Values, norms and social influence",
+        "reading": [
+          "Video lecture 6",
+          "Higgins, E. T. — «What is value? Where does it come from?» (Handbook of Value, Oxford 2015)",
+          "Adilova et al. (2021) — Value orientations of modern Kazakhstanis",
+          "Aimaganbetova et al. (2024) — Value orientations of modern Kazakhstani youth"
+        ],
+        "practice": [
+          "Values assessment: Portrait Values Questionnaire",
+          "Values Inventory worksheet (peer-assessment)"
+        ]
+      },
+      {
+        "n": 7,
+        "topic": "Communication and interpersonal relationships",
+        "events": [
+          "Watching & Reading 3: body language, saying no"
+        ],
+        "reading": [
+          "Video lecture 7",
+          "Ch. 1: Professional communications (kpu.pressbooks.pub)",
+          "DeLamater et al. (2025) — Symbolic Communication and Language",
+          "Kirwan — section 3: Computer-Mediated Communication and Online Media",
+          "Video: TEDx — The Power of Nonverbal Communication"
+        ],
+        "practice": [
+          "Mini online-course «Psychodemia»",
+          "Group discussion",
+          "WIRED body-language videos, Patrick — The Power of Saying No, ch. 1"
+        ]
+      },
+      {
+        "n": 8,
+        "topic": "Group communication and effective communication",
+        "reading": [
+          "Video lecture 8",
+          "Ch. 9: Effective Communication (opentextbc.ca)",
+          "Sandstrom et al. (2022) — Talking to strangers: a week-long intervention…"
+        ],
+        "practice": [
+          "Training on development of communication skills"
+        ]
+      },
+      {
+        "n": 9,
+        "topic": "Psychology of groups; socio-psychological conflict",
+        "events": [
+          "Graded case study analysis",
+          "Watching 4: 12 Angry Men"
+        ],
+        "reading": [
+          "Video lecture 9",
+          "Forsyth (2025) — The psychology of groups (Noba)",
+          "Fiske (2025) — Prejudice, discrimination, and stereotyping (Noba)",
+          "DeLamater — Understanding groups",
+          "Garcia & Halldorsson (2025) — Social comparison (Noba)",
+          "Psychology of Human Relations — ch. 9.2: Conflict Management Strategies",
+          "Kirwan — section 8: The Dynamics of Groups Online"
+        ],
+        "practice": [
+          "Graded case study analysis — review week 9",
+          "Movie analysis + group discussion: 12 Angry Men (1957)"
+        ]
+      },
+      {
+        "n": 10,
+        "topic": "Meaning of life and psychological well-being",
+        "events": [
+          "Endterm exam",
+          "Graded Assignment 2: online course"
+        ],
+        "reading": [
+          "Video lecture 10",
+          "Drob (2022) — Psychology, Values, and the Meaning of Life (Journal of Humanistic Psychology)"
+        ],
+        "practice": [
+          "Endterm exam — review weeks 6–10",
+          "Graded Assignment 2: screenshot of grades + certificate link (Coursera / Stepik)"
+        ]
+      }
+    ],
+    "rules": [
+      "Ожидается 100% посещаемость; до 30% пропусков — только по уважительной причине.",
+      "Опоздание больше 10 минут — отсутствие.",
+      "Поздняя сдача: −10% в день, позже 3 дней не принимают. Лекционные квизы и SIS не продлеваются.",
+      "ИИ — как вспомогательный инструмент и только с раскрытием, какой и как. Преподаватель может вызвать на устную защиту.",
+      "Финал — офлайн в кампусе в экзаменационную неделю; пересдать положительную оценку нельзя.",
+      "Письма только с Outlook, ответ до 3 рабочих дней; после 17:00 и в выходные не пишут."
+    ]
+  },
+  "Sociology": {
+    "source": "Sociology Syllabus PDF.pdf",
+    "at": "2026-09-14",
+    "verified": "hand",
+    "year": "2026-2027",
+    "code": "HSS 1122 / HSS 1132 (Soz 2109)",
+    "approved": "08.2026, School of General Education Disciplines",
+    "credits": 2,
+    "hours": {
+      "lectures": 10,
+      "practice": 10,
+      "lab": 0,
+      "iass": 10,
+      "sis": 30,
+      "total": 60
+    },
+    "language": "English",
+    "instructors": [
+      {
+        "name": "Assem Kusmanova",
+        "role": "Senior Lecturer",
+        "office": "C1.1.269"
+      },
+      {
+        "name": "Anel Nurkanat",
+        "role": "Senior Lecturer",
+        "office": "C1.1.269"
+      },
+      {
+        "name": "Iliyas Tileubergenov",
+        "role": "Senior Lecturer",
+        "office": "C1.1.269"
+      }
+    ],
+    "formula": "0.3 × Att1 + 0.3 × Att2 + 0.4 × Final",
+    "periods": {
+      "1": [
+        {
+          "name": "Assignment 1",
+          "points": 30,
+          "kind": "assignment",
+          "form": "see the SIS list"
+        },
+        {
+          "name": "Assignment 2",
+          "points": 30,
+          "kind": "assignment",
+          "form": "see the SIS list"
+        },
+        {
+          "name": "Midterm quiz (paper-based) / oral glossary check",
+          "points": 40,
+          "kind": "midterm",
+          "week": 5,
+          "form": "PBT quiz on weeks 1–5"
+        }
+      ],
+      "2": [
+        {
+          "name": "Assignment 3",
+          "points": 30,
+          "kind": "assignment",
+          "form": "see the SIS list"
+        },
+        {
+          "name": "Assignment 4",
+          "points": 30,
+          "kind": "assignment",
+          "form": "see the SIS list"
+        },
+        {
+          "name": "Endterm quiz (paper-based) / oral glossary check",
+          "points": 40,
+          "kind": "endterm",
+          "form": "PBT quiz"
+        }
+      ],
+      "final": [
+        {
+          "name": "Final exam — MCQ test with proctors",
+          "points": 100,
+          "kind": "final",
+          "form": "multiple choice, matching, short answers, case analysis"
+        }
+      ]
+    },
+    "books": [
+      "Giddens & Sutton — Sociology, 9th ed. (Polity, 2021)",
+      "Brinkerhoff, Ortega, Weitz — Essentials of Sociology, 9th ed. (2013)",
+      "Ritzer — Introduction to Sociology (SAGE, 2015)",
+      "Conerly et al. — Introduction to Sociology 3e (OpenStax, 2021)",
+      "Macionis & Plummer — Sociology: A Global Introduction (Pearson, 2014)"
+    ],
+    "prep_note": "Силлабус: материалы и презентации читаются до занятия; лекции идут по продвинутым темам, которые без прочитанного не понять. Каждая практика — «prepare on the following topics».",
+    "weeks": [
+      {
+        "n": 1,
+        "topic": "Introduction to Sociology",
+        "subtopics": [
+          "Sociological imagination",
+          "Sociological theories",
+          "Social structures",
+          "Social institutions",
+          "Social norms and rules"
+        ],
+        "practice": [
+          "Prepare for practice on the topics above"
+        ]
+      },
+      {
+        "n": 2,
+        "topic": "Sociological theories",
+        "subtopics": [
+          "Sociological imagination",
+          "Founding fathers of sociology: Comte, Durkheim, Weber, Marx",
+          "Major theories: structural functionalism, the conflict approach, symbolic interactionism"
+        ],
+        "practice": [
+          "Prepare for practice on the topics above"
+        ]
+      },
+      {
+        "n": 3,
+        "topic": "Sociological research",
+        "subtopics": [
+          "Sociological research: definition, functions, types",
+          "Research design: question, object, purpose, tasks, hypothesis, operationalization",
+          "Methods: survey, interview, focus group, observation, experiment — advantages and disadvantages"
+        ],
+        "reading": [
+          "Neuman (2014) — Social Research Methods, «Why Do Research?» pp. 1–24"
+        ],
+        "practice": [
+          "Prepare for practice on the topics above"
+        ]
+      },
+      {
+        "n": 4,
+        "topic": "Social structure and stratification of society",
+        "subtopics": [
+          "Social structure, social stratification, types of stratification systems",
+          "Social mobility and its types",
+          "Open and closed society; equality, equity and inequality"
+        ],
+        "practice": [
+          "Analysis of a film / cartoon / anime through the optics of stratification"
+        ]
+      },
+      {
+        "n": 5,
+        "topic": "Religion, culture and society",
+        "events": [
+          "Midterm quiz (weeks 1–5)"
+        ],
+        "subtopics": [
+          "Elements of culture: language, values, norms, traditions",
+          "Functions of religion as a social institution; conflicts between society and religion",
+          "Cultural convergence and cultural imperialism"
+        ],
+        "reading": [
+          "Brinkerhoff — Essentials of Sociology",
+          "Giddens — Sociology",
+          "Ritzer — Sociological Theory"
+        ],
+        "practice": [
+          "Paper-based midterm quiz on lectures, practice and materials of weeks 1–5"
+        ]
+      },
+      {
+        "n": 6,
+        "topic": "Socialization and sociology of identity",
+        "subtopics": [
+          "Theories of identity",
+          "Theories of socialization",
+          "Agents of socialization",
+          "Secondary agent: social media",
+          "Sociology of digital media"
+        ],
+        "practice": [
+          "Prepare for practice on the topics above"
+        ]
+      },
+      {
+        "n": 7,
+        "topic": "Deviance, crime and social control",
+        "subtopics": [
+          "Deviation and social control",
+          "Theoretical approaches to the causes of deviation",
+          "Anomie and society",
+          "Delinquency and crime"
+        ],
+        "practice": [
+          "Prepare for practice on the topics above"
+        ]
+      },
+      {
+        "n": 8,
+        "topic": "Sociology of the family and marriage",
+        "subtopics": [
+          "Basic concepts of the family institute, types of families",
+          "Theoretical perspectives on families",
+          "The family in historical context",
+          "Inequality within the family, divorce and separation"
+        ],
+        "reading": [
+          "KIPD report on Kazakhstani families (ru.kipd.kz)"
+        ],
+        "practice": [
+          "Prepare for practice on the topics above"
+        ]
+      },
+      {
+        "n": 9,
+        "topic": "Social change: contemporary sociological debates",
+        "subtopics": [
+          "Social changes",
+          "Sociological perspectives on social change",
+          "Key components of social change",
+          "Homogenization and unification",
+          "Digitalization and network society: influence of AI"
+        ],
+        "practice": [
+          "Prepare for practice on the topics above"
+        ]
+      },
+      {
+        "n": 10,
+        "topic": "Education and social inequality",
+        "events": [
+          "Endterm quiz"
+        ],
+        "subtopics": [
+          "Education in a global perspective",
+          "Education as a social institution",
+          "Functions of formal education",
+          "Social class, gender and ethnic differences",
+          "Access to education, cultural capital, inequality",
+          "Education and the cult of knowledge"
+        ],
+        "practice": [
+          "Prepare for practice on the topics above"
+        ]
+      }
+    ],
+    "sis": [
+      "Reading Neuman «Why Do Research?» (pp. 1–24) — individual work",
+      "Creating a video (Reels): stratification, mobility, theories of capital",
+      "Reading Granovetter «The Strength of Weak Ties» — individual work",
+      "Crafting project: your family as a social institution — handmade visual object + 1–2 pages",
+      "UN Humanities Ambassador Project — not graded, but REQUIRED for admission to the endterm",
+      "Reading Gelfand «Rule Makers, Rule Breakers», part 1",
+      "Analysis of the KIPD report on Kazakhstani families"
+    ],
+    "rules": [
+      "Минимум 70% посещаемости для допуска к экзамену; больше 30% пропусков без причины — «не аттестован».",
+      "Опоздание до 10 минут — «Late», 15 минут и больше — отсутствие.",
+      "Поздняя сдача: −10% в день, позже 3 дней не принимают.",
+      "ИИ — как вспомогательный ресурс с указанием, как использовался; на квизах и экзаменах запрещён.",
+      "Финал — MCQ с прокторами; опоздание на 15 минут — не допускают. FX (25–49) пересдаётся платно.",
+      "Проект UN Humanities Ambassador не оценивается, но без него не допустят к endterm."
+    ]
+  },
+  "Digital Media, Culture and Society": {
+    "source": "Syllabus Term 1 Digital media, Culture and Society.pdf",
+    "at": "2026-09-14",
+    "verified": "hand",
+    "year": "2026-2027",
+    "code": "",
+    "approved": "06.2026, School of General Education Disciplines",
+    "credits": 5,
+    "hours": {
+      "lectures": 0,
+      "practice": 50,
+      "lab": 0,
+      "iass": 10,
+      "sis": 90,
+      "total": 150
+    },
+    "language": "English",
+    "instructors": [
+      {
+        "name": "Elmira Gerfanova",
+        "role": "Assistant Professor",
+        "office": "C1.1.267"
+      },
+      {
+        "name": "Assem Kusmanova",
+        "role": "Senior Lecturer"
+      }
+    ],
+    "formula": "(0.33·MCA + 0.33·DIP + 0.34·MT) + (0.33·TSP + 0.33·TSR + 0.34·ET) + 0.4 × Final",
+    "periods": {
+      "1": [
+        {
+          "name": "Assignment 1 — Comparative analysis matrix: Digital Europe & Digital Kazakhstan (MCA)",
+          "points": 33,
+          "kind": "assignment",
+          "week": 3,
+          "form": "matrix (pdf), defense in class"
+        },
+        {
+          "name": "Assignment 2 — Digital identity project (DIP)",
+          "points": 33,
+          "kind": "assignment",
+          "week": 5,
+          "form": "infographics, defense in class"
+        },
+        {
+          "name": "Midterm — paper-based quiz",
+          "points": 34,
+          "kind": "midterm",
+          "week": 5,
+          "form": "quiz"
+        }
+      ],
+      "2": [
+        {
+          "name": "Assignment 3 — Technology and Social Impact Project Proposal (TSP)",
+          "points": 33,
+          "kind": "assignment",
+          "week": 7,
+          "form": "presentation, ANT map"
+        },
+        {
+          "name": "Assignment 4 — Technology and Social Impact Research (TSR)",
+          "points": 33,
+          "kind": "assignment",
+          "week": 9,
+          "form": "presentation, stakeholder map"
+        },
+        {
+          "name": "Endterm — paper-based quiz",
+          "points": 34,
+          "kind": "endterm",
+          "week": 10,
+          "form": "quiz"
+        }
+      ],
+      "final": [
+        {
+          "name": "Final project — Technology and Society Showcase",
+          "points": 100,
+          "kind": "final",
+          "form": "group: poster, 5-minute pitch, interactive activity"
+        }
+      ]
+    },
+    "books": [
+      "Kirwan, Connolly, Barton, Palme — An Introduction to Cyberpsychology (Routledge, 2024)",
+      "Rohlinger & Sobieraj — The Oxford Handbook of Digital Media Sociology (2022)",
+      "Giddens & Sutton — Sociology, ch. 19 «The Media» (2021)",
+      "Winner (1980) — Do Artifacts Have Politics?; Latour (2005) — Reassembling the Social",
+      "Turkle — Reclaiming Conversation (2015), Alone Together (2011); Wu — The Attention Merchants (2016)",
+      "O'Neil — Weapons of Math Destruction (2016); Zuboff — The Age of Surveillance Capitalism (2019); Postman — Technopoly (1992)"
+    ],
+    "prep_note": "Каждая практика идёт по заданиям силлабуса: до занятия — чтение, MCQ-квиз и пост в Padlet (асинхронные уроки 4–5), на занятии — обсуждения и задания из списка ниже.",
+    "weeks": [
+      {
+        "n": 1,
+        "topic": "Digital culture: key concepts and terminology",
+        "events": [
+          "MCQ quiz + Padlet post"
+        ],
+        "subtopics": [
+          "Introduction to the course, syllabus, academic integrity",
+          "Digital culture in everyday life"
+        ],
+        "reading": [
+          "Başaran İnce (2014) — Digital culture, new media and collective memory, pp. 10–15"
+        ],
+        "practice": [
+          "Speed interview: introduce a classmate",
+          "Digital habits survey (Mentimeter) and your digital footprint",
+          "Course & syllabus exploration",
+          "Academic integrity workshop: plagiarism, AI use, collaboration",
+          "Compare scholarly definitions of digital culture",
+          "Digital culture in action: analyze scenarios"
+        ]
+      },
+      {
+        "n": 2,
+        "topic": "Global vs local: how digital culture differs across contexts",
+        "events": [
+          "Assignment 1 explained",
+          "MCQ quiz + Padlet post"
+        ],
+        "subtopics": [
+          "Digital Europe: EU priorities for digital transformation",
+          "Digital Kazakhstan: policy goals and vision",
+          "Comparative discussion: Kazakhstan vs EU in digital policy"
+        ],
+        "reading": [
+          "Kirwan et al. — ch. 3 «Human Interaction Online», pp. 43–56 (pp. 46–48 Language and online communication)"
+        ],
+        "practice": [
+          "Rank current digital issues; what should governments prioritize",
+          "EU Digital Compass; Digital Decade 2030 targets",
+          "Jigsaw reading: AI in healthcare (EU report) — benefits, risks, case studies",
+          "Digital Kazakhstan: everyday digital services, transformation priorities; policy vocabulary & listening",
+          "EU–Kazakhstan comparative analysis of one policy area"
+        ]
+      },
+      {
+        "n": 3,
+        "topic": "Digital identity: how we present ourselves online",
+        "events": [
+          "Assignment 1 defense",
+          "Assignment 2 explained",
+          "MCQ quiz + Padlet post"
+        ],
+        "subtopics": [
+          "Digital identity and online communities",
+          "Online vs offline identity"
+        ],
+        "reading": [
+          "Kirwan et al. — ch. 4 «Self and Identity in Space», pp. 59–69 (pp. 49–52 Communication theories)"
+        ],
+        "practice": [
+          "Ibelin case study: Mats Steen's offline life vs online identity",
+          "Vocabulary in context",
+          "Digital identity analysis in groups: avatar, self-presentation, reputation, community",
+          "Opportunities and risks of digital identity",
+          "Assignment 1 defense",
+          "Project defense preparation: assessment criteria, sample infographic, 3–5 minute presentation"
+        ]
+      },
+      {
+        "n": 4,
+        "topic": "Social media and cultural change",
+        "events": [
+          "MCQ quiz + Padlet post"
+        ],
+        "subtopics": [
+          "Social media use in Europe and Kazakhstan: trends and practices",
+          "Social media and its influence on society"
+        ],
+        "reading": [
+          "Kirwan et al. — pp. 44–46 Communication tools online: a very short history of computer-mediated communication"
+        ],
+        "practice": [
+          "«One post changed my…» reflection",
+          "Social media influence map",
+          "Pre-viewing prediction; vocabulary in context",
+          "Video: social media and peer influence — notes and post-viewing discussion"
+        ]
+      },
+      {
+        "n": 5,
+        "topic": "Digital identity project; midterm",
+        "events": [
+          "Assignment 2 defense",
+          "Midterm quiz",
+          "MCQ quiz + Padlet post"
+        ],
+        "reading": [
+          "Kirwan et al. — pp. 66–68 Identifiable online environments: identity and self in anonymous vs identifiable environments"
+        ],
+        "practice": [
+          "Individual or group presentation of the Digital Identity Project",
+          "Reflection on personal online identity and digital footprint",
+          "Peer feedback and discussion",
+          "Midterm paper-based quiz"
+        ]
+      },
+      {
+        "n": 6,
+        "topic": "Technology, society and power",
+        "events": [
+          "MCQ quiz + Padlet post"
+        ],
+        "subtopics": [
+          "Technologies are not neutral: introduction to STS",
+          "Technological determinism vs social construction of technology (SCOT)",
+          "Seminar: Do Artifacts Have Politics? (Langdon Winner)"
+        ],
+        "reading": [
+          "Winner (1980) — Do Artifacts Have Politics?",
+          "Latour (2005) — Reassembling the Social (selected excerpts)"
+        ],
+        "practice": [
+          "Group discussion «Are technologies neutral?»",
+          "Comparative analysis: determinism vs SCOT",
+          "Case study: how technologies produce unintended social consequences",
+          "Select a technology / platform / digital practice for the semester project",
+          "Introduction to Actor-Network Theory (ANT)"
+        ]
+      },
+      {
+        "n": 7,
+        "topic": "Attention, identity and digital communities",
+        "events": [
+          "Assignment 3",
+          "MCQ quiz + Padlet post"
+        ],
+        "subtopics": [
+          "Attention economy: how platforms compete for attention",
+          "Emotional capitalism: likes, validation, digital anxiety",
+          "Digital communities and new forms of belonging"
+        ],
+        "reading": [
+          "Turkle (2015) — Reclaiming Conversation",
+          "Turkle (2011) — Alone Together (excerpts)",
+          "Wu (2016) — The Attention Merchants (excerpts)"
+        ],
+        "practice": [
+          "Group discussion «How do platforms compete for our attention?»",
+          "Analysis of recommendation algorithms (TikTok, YouTube, Instagram, Netflix)",
+          "Reflection: how platforms shape identity and self-presentation",
+          "Case study: digital anxiety, FOMO, emotional validation",
+          "Workshop: applying Turkle and Wu to everyday digital practices",
+          "Assignment 3: Technology and Social Impact Project Proposal"
+        ]
+      },
+      {
+        "n": 8,
+        "topic": "Artificial intelligence, algorithms and social change",
+        "events": [
+          "MCQ quiz + Padlet post"
+        ],
+        "subtopics": [
+          "AI and the future of work",
+          "Algorithmic bias and ethical challenges",
+          "Debate: should we trust algorithms?"
+        ],
+        "reading": [
+          "O'Neil (2016) — Weapons of Math Destruction",
+          "Haraway (1991) — A Cyborg Manifesto (excerpts)"
+        ],
+        "practice": [
+          "Group discussion «Can algorithms be unfair?»",
+          "Case study: AI in education, recruitment, decision-making",
+          "Analysis of algorithmic bias and unintended consequences",
+          "Workshop: human vs machine decision-making",
+          "AI, creativity and the future of professional expertise"
+        ]
+      },
+      {
+        "n": 9,
+        "topic": "Surveillance, data and digital power",
+        "events": [
+          "Assignment 4",
+          "MCQ quiz + Padlet post"
+        ],
+        "subtopics": [
+          "Surveillance capitalism and data extraction",
+          "Privacy, platform power and social control"
+        ],
+        "reading": [
+          "Zuboff (2019) — The Age of Surveillance Capitalism",
+          "Postman (1992) — Technopoly (excerpts)"
+        ],
+        "practice": [
+          "Group discussion «Who owns our data?»",
+          "Case study: facial recognition, location tracking, data collection",
+          "Stakeholder mapping for students' project topics",
+          "Structured debate «Security versus Privacy»",
+          "Assignment 4: Technology and Social Impact Research"
+        ]
+      },
+      {
+        "n": 10,
+        "topic": "Designing responsible futures",
+        "events": [
+          "Endterm quiz",
+          "Final project preparation"
+        ],
+        "subtopics": [
+          "Unintended consequences and technological responsibility",
+          "Humane technology, citizen science, responsible innovation"
+        ],
+        "reading": [
+          "Postman (1992) — Technopoly (excerpts)"
+        ],
+        "practice": [
+          "Group discussion «Can we anticipate technological consequences?»",
+          "Real-world cases of unintended consequences",
+          "Workshop on humane technology and responsible innovation",
+          "Citizen science activity",
+          "Final project consultation; student presentations",
+          "Endterm paper-based quiz"
+        ]
+      }
+    ],
+    "sis": [
+      "Каждую неделю асинхронно: чтение, MCQ-квиз и пост в Padlet на 100–150 слов"
+    ],
+    "rules": [
+      "Минимум 70% посещаемости для зачёта.",
+      "Поздняя сдача: −5% в день, позже 3 дней не принимают. Дедлайн — обычно конец практики.",
+      "ИИ — только там, где явно разрешён, с раскрытием; на midterm, endterm и финале запрещён.",
+      "Финал — групповой проект на Technology and Society Showcase: постер, 5-минутный питч, интерактив."
+    ]
+  }
+}
