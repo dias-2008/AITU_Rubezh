@@ -590,10 +590,28 @@ if (DATA.demo) {
   document.getElementById("demoBanner").appendChild(b);
 }
 
+/* Сборка не достучалась до серверов по сети. Без этой полосы пустой дашборд
+   выглядит как «заданий нет», и человек спокойно пропускает дедлайн. */
+const SERVICE_NAMES = { lms: "Moodle", du: "портал AITU", outlook: "Outlook" };
+const offline = DATA.offline || [];
+if (offline.length) {
+  const names = offline.map(s => SERVICE_NAMES[s] || s).join(" и ");
+  const box = el("div", "relog");
+  const txt = el("div", "txt");
+  txt.appendChild(document.createTextNode(
+    "Нет подключения к интернету — " + names + " не " + (offline.length > 1 ? "ответили" : "ответил")
+    + ". Задания, оценки и расписание ниже могут быть неполными."));
+  const hint = el("small");
+  hint.textContent = "Сборка от " + DATA.updated + ". Проверь сеть и открой ярлык AITU Rubezh ещё раз "
+    + "или выполни: python rubezh.py build";
+  txt.appendChild(hint);
+  box.appendChild(txt);
+  document.getElementById("demoBanner").appendChild(box);
+}
+
 /* Сессия протухла — кнопка прямо здесь. Дашборд лежит на диске и сам ничего
    запустить не может, поэтому ссылка своей схемы rubezh://, которую Windows
    отдаёт нашему же скрипту. Схему включает `python rubezh.py register`. */
-const SERVICE_NAMES = { lms: "Moodle", du: "портал AITU", outlook: "Outlook" };
 const need = DATA.needs_login || [];
 if (need.length) {
   /* Одна полоса и одна кнопка на всё, даже если протухли обе сессии: иначе

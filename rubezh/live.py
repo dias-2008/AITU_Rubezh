@@ -12,6 +12,8 @@ import json
 from datetime import date, datetime
 from pathlib import Path
 
+import requests
+
 import aitu
 import fast
 import grade
@@ -22,6 +24,8 @@ import session
 
 COURSES_FN = "core_course_get_enrolled_courses_by_timeline_classification"
 EVENTS_FN = "core_calendar_get_action_events_by_timesort"
+# Нет сети, DNS не резолвится, сервер не отвечает вовремя.
+NETWORK_ERRORS = (requests.ConnectionError, requests.Timeout)
 
 
 _refreshed = set()
@@ -245,7 +249,7 @@ def gather(today=None):
     войти», а не с трассировкой стека из ярлыка на рабочем столе.
     """
     today = today or date.today()
-    notes, courses, loose, schedule, needs = [], [], [], [], []
+    notes, courses, loose, schedule, needs, offline = [], [], [], [], [], []
 
     # Группа из профиля надёжнее подслушанного запроса: профиль — это факт,
     # а перехват зависит от того, успела ли страница его отправить.
@@ -261,8 +265,12 @@ def gather(today=None):
         courses = _courses()
         loose = _attach_deadlines(courses, today)
         _evaluate(courses)
+    # Сетевой сбой отделяем от прочих: «HTTPSConnectionPool… Max retries» человеку
+    # ничего не говорит, а «нет интернета» — говорит, и чинится с его стороны.
     except fast.Stale:
         needs.append("lms")
+    except NETWORK_ERRORS:
+        offline.append("lms")
     except Exception as error:
         notes.append(f"Moodle сейчас не отвечает: {str(error)[:120]}")
 
@@ -271,12 +279,17 @@ def gather(today=None):
     except fast.Stale:
         needs.append("du")
         schedule = _schedule_file()
+    except NETWORK_ERRORS:
+        offline.append("du")
+        schedule = _schedule_file()
     except Exception as error:
         notes.append(f"Портал сейчас не отвечает: {str(error)[:120]}")
         schedule = _schedule_file()
 
     # Честно объясняем пустоту, вместо того чтобы показывать пустой экран молча.
-    if not needs:
+    # Без связи пустота объясняется сама — полосой «нет подключения», и «вас не
+    # записали на курсы» было бы неправдой: Moodle просто не спросили.
+    if not needs and not offline:
         if not courses:
             # Раньше здесь стояло «появятся, когда начнётся обучение». Обучение
             # началось, а курсов всё нет: Moodle отвечает «You're not enrolled
@@ -326,4 +339,5 @@ def gather(today=None):
         "schedule": schedule,
         "notes": notes,
         "needs_login": needs,
+        "offline": offline,
     }
