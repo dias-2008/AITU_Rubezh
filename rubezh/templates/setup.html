@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Настройка AITU Rubezh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Токены — те же, что в dashboard.html: мастер и дашборд должны выглядеть одним продуктом. */
+:root{
+  --bg:#F6F7F9; --surface:#FFFFFF; --surface-2:#F0F2F5;
+  --border:#E2E6EC; --border-strong:#CFD6DE;
+  --ink:#141A20; --ink-2:#59656F; --ink-3:#8A95A1;
+  --accent:#0E7C86; --accent-ink:#0A5C64; --accent-soft:#DFF0F1; --on-accent:#FFFFFF;
+  --good:#2E7A55; --good-soft:#E0F0E7;
+  --bad:#A5342A; --bad-soft:#F8E3E0;
+  --shadow:0 1px 2px rgba(20,26,32,.05), 0 1px 3px rgba(20,26,32,.04);
+  --r:10px;
+  --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --sans:"Golos Text",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0E1215; --surface:#161B21; --surface-2:#1B222A;
+    --border:#28313A; --border-strong:#3A4550;
+    --ink:#E7EDF3; --ink-2:#9BA7B3; --ink-3:#6C7784;
+    --accent:#3FB2BC; --accent-ink:#7FD3DA; --accent-soft:#123037; --on-accent:#0E1215;
+    --good:#5BB183; --good-soft:#152C22;
+    --bad:#E07A6B; --bad-soft:#33201D;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.3);
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+     font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2{margin:0;font-weight:600;letter-spacing:-.01em}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.wrap{max-width:660px;margin:0 auto;padding:32px 16px 64px}
+.brand{display:flex;align-items:center;gap:9px;margin-bottom:26px}
+.mark{width:26px;height:26px;border-radius:7px;background:var(--accent);flex:none;
+      display:grid;place-items:center;color:#fff;font-family:var(--mono);font-weight:600;font-size:13px}
+.brand b{font-size:14.5px;font-weight:600;letter-spacing:-.02em}
+.head h1{font-size:24px}
+.head p{margin:4px 0 0;color:var(--ink-2)}
+.progress{margin:18px 0 22px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--ink-3)}
+.bar{flex:1;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.eyebrow{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.09em;
+         text-transform:uppercase;color:var(--ink-3);margin:22px 0 8px}
+.step{display:flex;gap:13px;background:var(--surface);border:1px solid var(--border);
+      border-radius:var(--r);box-shadow:var(--shadow);padding:15px 16px;margin-bottom:10px}
+.dot{width:26px;height:26px;border-radius:50%;flex:none;display:grid;place-items:center;
+     font-family:var(--mono);font-size:12px;font-weight:600;
+     background:var(--surface-2);color:var(--ink-2);border:1px solid var(--border)}
+.step.is-done .dot{background:var(--good-soft);color:var(--good);border-color:transparent}
+.main{flex:1;min-width:0}
+.row{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.row h2{font-size:15px}
+.pill{font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;white-space:nowrap;
+      background:var(--surface-2);color:var(--ink-3)}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.desc{margin:4px 0 0;color:var(--ink-2);font-size:13px}
+.desc ol{margin:6px 0 0;padding-left:20px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px;align-items:center}
+button{font:inherit;font-size:13px;font-weight:500;border-radius:7px;padding:7px 14px;cursor:pointer;
+       border:1px solid var(--accent);background:var(--accent);color:var(--on-accent)}
+button:hover:not(:disabled){filter:brightness(1.08)}
+button.ghost{background:none;color:var(--accent-ink);border-color:var(--border-strong)}
+button:disabled{opacity:.5;cursor:default}
+button.big{font-size:15px;padding:11px 22px}
+input,select{font:inherit;font-size:13px;padding:7px 10px;border-radius:7px;min-width:0;
+             border:1px solid var(--border-strong);background:var(--surface);color:var(--ink)}
+input{flex:1;font-family:var(--mono)}
+.msg{margin:9px 0 0;font-size:12.5px;white-space:pre-wrap;padding:7px 10px;border-radius:7px}
+.msg.ok{background:var(--good-soft);color:var(--good)}
+.msg.bad{background:var(--bad-soft);color:var(--bad)}
+.wait{display:flex;align-items:center;gap:8px;margin-top:11px;color:var(--accent-ink);font-size:13px}
+.spin{width:14px;height:14px;border-radius:50%;border:2px solid var(--accent-soft);
+      border-top-color:var(--accent);animation:spin .8s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+details.step{display:block}
+details summary{cursor:pointer;font-weight:600;font-size:15px}
+.finish{margin-top:26px;text-align:center}
+.finish p{color:var(--ink-3);font-size:12.5px;margin:8px 0 0}
+.loading{display:flex;gap:9px;align-items:center;color:var(--ink-2);margin-top:28px}
+code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+a{color:var(--accent-ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><div class="mark">Р</div><b>AITU Rubezh</b></div>
+  <div class="head">
+    <h1>Настройка</h1>
+    <p>Минут пять: два входа университетским аккаунтом, остальное по желанию.
+       Вернуться сюда можно в любой момент — сделанное останется отмеченным.</p>
+  </div>
+  <div id="app"><div class="loading"><span class="spin"></span>Проверяю, что уже сделано…</div></div>
+</div>
+<script>
+let S = null;          // состояние с сервера
+let busy = null;       // какой шаг сейчас идёт
+let over = false;      // нажали «Готово»
+const msg = {};        // ответ сервера по шагам
+const inputs = {token: '', chat_id: '', group: ''};
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const WAIT = {
+  browser: 'Скачиваю Chromium (~150 МБ)…',
+  lms: 'Войди в открывшемся окне — оно закроется само.',
+  du: 'Войди в открывшемся окне — оно закроется само.',
+  outlook: 'Войди в открывшемся окне — оно закроется само.',
+  telegram: 'Спрашиваю Telegram…',
+  finish: 'Собираю дашборд — это до минуты…',
+};
+
+async function load() {
+  try {
+    S = await (await fetch('api/state')).json();
+  } catch (e) {
+    S = null;
+  }
+  render();
+}
+
+async function act(name, body = {}) {
+  if (busy) return;
+  busy = name; msg[name] = null; render();
+  try {
+    const r = await (await fetch('api/do/' + name, {
+      method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body),
+    })).json();
+    msg[name] = {ok: r.ok, text: r.message};
+    if (r.state) S = r.state;
+    if (name === 'finish' && r.ok) over = true;
+  } catch (e) {
+    msg[name] = {ok: false, text: 'Мастер не отвечает — окно консоли закрыли? Открой «Настройка AITU Rubezh» заново.'};
+  }
+  busy = null; render();
+}
+
+function steps() {
+  const d = n => S.done.includes(n);
+  const list = [];
+  if (!S.browser || d('browser')) list.push({id: 'browser', must: true, done: S.browser,
+    title: 'Браузер для входа',
+    desc: S.browser ? 'Chromium на месте.'
+        : S.frozen ? 'Chromium должен был прийти с установщиком, но его нет. Переустанови программу.'
+                   : 'Для входа в Moodle и портал нужен Chromium — скачается один раз, ~150 МБ.',
+    act: S.frozen || S.browser ? '' : btn('browser', 'Скачать')});
+  list.push({id: 'lms', must: true, done: S.lms, title: 'Вход в Moodle',
+    desc: 'Откуда берутся курсы, дедлайны, оценки и посещаемость.',
+    act: btn('lms', S.lms ? 'Войти заново' : 'Открыть окно входа', S.lms)});
+  list.push({id: 'du', must: true, done: S.du, title: 'Вход в портал AITU',
+    desc: 'Откуда берутся имя, группа и расписание.',
+    act: btn('du', S.du ? 'Войти заново' : 'Открыть окно входа', S.du)});
+  if (S.groups.length || S.group_have.length) {
+    const have = S.group_have.length > 0;
+    if (!inputs.group) inputs.group = S.groups.find(g => g.toLowerCase() === S.group_mine.toLowerCase()) || '';
+    list.push({id: 'group', done: have, title: 'Расписание и силлабусы группы',
+      desc: have ? 'Уже лежат: ' + S.group_have.join(', ')
+                 : 'Для некоторых групп в репозитории есть готовые файлы. Нет твоей — пропусти, расписание придёт с портала.',
+      act: have ? '' : `<select onchange="inputs.group=this.value"><option value="">Выбери группу</option>${
+        S.groups.map(g => `<option ${g === inputs.group ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select>` +
+        btn('group', 'Положить', false, () => ({group: inputs.group}))});
+  }
+  list.push(telegram());
+  if (S.desktop && !S.installed) {
+    list.push({id: 'shortcut', done: d('shortcut'), title: 'Ярлык на рабочем столе',
+      desc: 'Двойной клик пересобирает дашборд свежими данными и открывает его.',
+      act: btn('shortcut', 'Положить ярлык', d('shortcut'))});
+    list.push({id: 'protocol', done: d('protocol'), title: 'Кнопка «Войти» на дашборде',
+      desc: 'Когда сессия истечёт, на дашборде появится кнопка, которая откроет окно входа прямо оттуда.',
+      act: btn('protocol', 'Включить', d('protocol'))});
+  }
+  return list;
+}
+
+function telegram() {
+  const s = {id: 'telegram', done: S.chat && S.scheduled, title: 'Уведомления в Telegram',
+    desc: 'Раз в час программа сама проверит Moodle и портал и напишет, если появилось задание, перенесли срок или истекла сессия.'};
+  if (!S.bot) {
+    s.id = 'token';
+    s.desc += `<ol><li>В Telegram открой <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a>, отправь <code>/newbot</code>, придумай имя.</li>
+      <li>Скопируй токен вида <code>12345678:AAF…</code> и вставь сюда.</li></ol>`;
+    s.act = `<input placeholder="Токен бота" value="${esc(inputs.token)}" oninput="inputs.token=this.value">` +
+            btn('token', 'Сохранить', false, () => ({token: inputs.token}));
+  } else if (!s.done) {
+    const stuck = msg.telegram && !msg.telegram.ok && /chat-id/.test(msg.telegram.text);
+    s.desc += S.chat ? '<br>Бот знает, куда писать, осталось включить проверку.'
+                     : '<br>Открой своего бота в Telegram, нажми <b>Start</b> и отправь ему любое сообщение. Потом жми кнопку.';
+    s.act = (stuck ? `<input placeholder="chat_id из списка выше" value="${esc(inputs.chat_id)}" oninput="inputs.chat_id=this.value">` : '') +
+            btn('telegram', S.chat ? 'Включить проверку' : 'Я написал боту', false,
+                () => (inputs.chat_id.trim() ? {chat_id: inputs.chat_id.trim()} : {}));
+  } else {
+    s.desc += '<br>Работает: бот знает, куда писать, проверка стоит в планировщике.';
+  }
+  s.extra = msg.token && msg.token.ok && s.id === 'telegram' ? msg.token : null;
+  return s;
+}
+
+const handlers = {};
+function btn(name, label, ghost = false, body = () => ({})) {
+  handlers[name] = body;
+  return `<button class="${ghost ? 'ghost' : ''}" ${busy ? 'disabled' : ''} onclick="act('${name}', handlers['${name}']())">${esc(label)}</button>`;
+}
+
+function card(s, n) {
+  const m = msg[s.id] || s.extra;
+  const pill = s.done ? '<span class="pill good">Готово</span>'
+             : `<span class="pill">${s.must ? 'Нужно' : 'По желанию'}</span>`;
+  const act = busy === s.id ? `<div class="wait"><span class="spin"></span>${esc(WAIT[s.id] || 'Работаю…')}</div>`
+            : s.act ? `<div class="actions">${s.act}</div>` : '';
+  return `<section class="step ${s.done ? 'is-done' : ''}">
+    <div class="dot">${s.done ? '✓' : n}</div>
+    <div class="main">
+      <div class="row"><h2>${esc(s.title)}</h2>${pill}</div>
+      <div class="desc">${s.desc}</div>
+      ${act}
+      ${m && busy !== s.id ? `<p class="msg ${m.ok ? 'ok' : 'bad'}">${esc(m.text)}</p>` : ''}
+    </div>
+  </section>`;
+}
+
+function render() {
+  const app = document.getElementById('app');
+  if (over) {
+    app.innerHTML = `<section class="step is-done" style="margin-top:24px"><div class="dot">✓</div><div class="main">
+      <h2>Готово</h2><p class="desc">Дашборд открылся в соседней вкладке. Эту можно закрыть.
+      Дальше дашборд открывается ${S && S.installed ? 'ярлыком на рабочем столе' : 'ярлыком или командой <code>python rubezh.py open</code>'}.</p></div></section>`;
+    return;
+  }
+  if (!S) {
+    app.innerHTML = '<p class="msg bad">Мастер не отвечает. Закрой вкладку и открой «Настройка AITU Rubezh» заново.</p>';
+    return;
+  }
+  const list = steps();
+  const must = list.filter(s => s.must), ready = must.filter(s => s.done).length;
+  let html = `<div class="progress"><span>Обязательное: ${ready} из ${must.length}</span>
+    <div class="bar"><i style="width:${100 * ready / must.length}%"></i></div></div>`;
+  html += '<div class="eyebrow">Обязательно</div>';
+  list.forEach((s, i) => {
+    if (i === must.length) html += '<div class="eyebrow">По желанию</div>';
+    html += card(s, i + 1);
+  });
+  html += `<details class="step"><summary>Почта Outlook</summary>
+    <p class="desc">Письма университета инструмент читает локальной моделью через Ollama: нужна установленная
+      <a href="https://ollama.com" target="_blank" rel="noopener">Ollama</a> и модель <code>gemma4:e4b</code> (~10 ГБ).
+      Без этого шаг не нужен.</p>
+    ${busy === 'outlook' ? `<div class="wait"><span class="spin"></span>${WAIT.outlook}</div>`
+      : `<div class="actions">${btn('outlook', S.done.includes('outlook') ? 'Войти заново' : 'Войти в Outlook', true)}</div>`}
+    ${msg.outlook && busy !== 'outlook' ? `<p class="msg ${msg.outlook.ok ? 'ok' : 'bad'}">${esc(msg.outlook.text)}</p>` : ''}
+  </details>`;
+  const outlookOpen = document.querySelector('details');
+  html += `<div class="finish">
+    ${busy === 'finish' ? `<div class="wait" style="justify-content:center"><span class="spin"></span>${WAIT.finish}</div>`
+      : btn('finish', 'Готово — открыть дашборд').replace('<button class="', '<button class="big ')}
+    ${ready < must.length ? '<p>Без входа в Moodle и портал дашборд будет пустым — но его можно открыть и так.</p>' : ''}
+    ${msg.finish && !msg.finish.ok ? `<p class="msg bad">${esc(msg.finish.text)}</p>` : ''}
+  </div>`;
+  app.innerHTML = html;
+  if (outlookOpen && outlookOpen.open) document.querySelector('details').open = true;
+}
+
+// Сервер живёт, пока открыта вкладка: отмечаемся, а при закрытии прощаемся.
+setInterval(() => { if (!over) fetch('api/ping', {method: 'POST'}).catch(() => {}); }, 20000);
+addEventListener('pagehide', () => navigator.sendBeacon('api/bye'));
+load();
+</script>
+</body>
+</html>

@@ -32,7 +32,7 @@ DATAS = [
 # статический анализ может не увидеть. Перечислить лишнее не страшно.
 HIDDEN = [
     "aitu", "demo", "desktop", "du", "fast", "grade", "journal", "live", "moodle",
-    "notify", "outlook", "paths", "session", "syllabus", "watch", "web", "wizard",
+    "notify", "outlook", "paths", "session", "syllabus", "watch", "web", "wizard", "wizard_web",
     "llm", "digest", "setup", "pypdf",
 ]
 

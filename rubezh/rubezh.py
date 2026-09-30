@@ -1,6 +1,7 @@
 """AITU Rubezh — дашборд студента AITU. Точка входа.
 
-    python rubezh.py setup            мастер первого запуска: всё ниже по шагам
+    python rubezh.py setup            мастер первого запуска в браузере: всё ниже по шагам
+    python rubezh.py setup --cli      ... то же вопросами в консоли
     python rubezh.py login lms        логин в Moodle (один раз)
     python rubezh.py login outlook    логин в Outlook (один раз)
     python rubezh.py status           живы ли сессии
@@ -377,9 +378,12 @@ def cmd_watch(args):
     return watch.run(dry="--dry" in args)
 
 
-def cmd_setup(_args):
-    import wizard
-    return wizard.run()
+def cmd_setup(args):
+    if "--cli" in args:
+        import wizard
+        return wizard.run()
+    import wizard_web
+    return wizard_web.run()
 
 
 COMMANDS = {"setup": cmd_setup, "open": cmd_open, "shortcut": cmd_shortcut, "syllabus": cmd_syllabus,

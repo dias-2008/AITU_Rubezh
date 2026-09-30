@@ -9,7 +9,8 @@
 ; Что делает сам установщик, чтобы мастеру setup осталось только войти:
 ;   - ярлыки: рабочий стол и меню Пуск (rubezh.exe open, окно свёрнуто)
 ;   - схема rubezh:// в HKCU — кнопка «Войти» на дашборде
-;   - на последнем экране предлагает запустить мастер
+;   - на последнем экране предлагает запустить мастер: он открывается страницей
+;     в браузере, а окно консоли при нём свёрнуто — там только запасной вывод
 ; При удалении снимает задачи планировщика и спрашивает, стирать ли данные.
 
 #ifndef Version
@@ -98,7 +99,7 @@ Name: "{app}\tg-digest"; Components: digest
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\rubezh.exe"; Parameters: "open"; WorkingDir: "{app}\rubezh"; IconFilename: "{app}\icon.ico"; Comment: "{cm:OpenDesc}"; Flags: runminimized
-Name: "{group}\{cm:SetupShortcut}"; Filename: "{app}\rubezh.exe"; Parameters: "setup"; WorkingDir: "{app}\rubezh"; IconFilename: "{app}\icon.ico"
+Name: "{group}\{cm:SetupShortcut}"; Filename: "{app}\rubezh.exe"; Parameters: "setup"; WorkingDir: "{app}\rubezh"; IconFilename: "{app}\icon.ico"; Flags: runminimized
 Name: "{group}\{cm:DigestShortcut}"; Filename: "{app}\digest.exe"; Parameters: "setup"; WorkingDir: "{app}\tg-digest"; IconFilename: "{app}\icon.ico"; Components: digest
 Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\rubezh.exe"; Parameters: "open"; WorkingDir: "{app}\rubezh"; IconFilename: "{app}\icon.ico"; Comment: "{cm:OpenDesc}"; Tasks: desktopicon; Flags: runminimized
@@ -111,7 +112,7 @@ Root: HKCU; Subkey: "Software\Classes\rubezh\DefaultIcon"; ValueType: string; Va
 Root: HKCU; Subkey: "Software\Classes\rubezh\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\rubezhw.exe"" protocol ""%1"""
 
 [Run]
-Filename: "{app}\rubezh.exe"; Parameters: "setup"; WorkingDir: "{app}\rubezh"; Description: "{cm:RunSetup}"; Flags: postinstall nowait skipifsilent
+Filename: "{app}\rubezh.exe"; Parameters: "setup"; WorkingDir: "{app}\rubezh"; Description: "{cm:RunSetup}"; Flags: postinstall nowait skipifsilent runminimized
 Filename: "{app}\digest.exe"; Parameters: "setup"; WorkingDir: "{app}\tg-digest"; Description: "{cm:RunDigestSetup}"; Flags: postinstall nowait skipifsilent unchecked; Components: digest
 
 [UninstallRun]
