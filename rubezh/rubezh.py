@@ -146,6 +146,8 @@ def cmd_sections(args):
                     mark = {"done": "✓", "todo": "☐"}.get(item["done"], "•")
                     print(f"   {mark} [{item['type']}] {item['name']}" + (f"  — {when}" if when else "")
                           + ("  🔒" if item["restricted"] else ""))
+                    if item["text"]:
+                        print("     " + item["text"][:300].replace(NL, NL + "     "))
         if "--all" not in args and not any(s["current"] for s in secs):
             print(f"   секций: {len(secs)}, текущая не помечена — смотри --all")
     return 0

@@ -29,6 +29,14 @@
 «To do: View, Receive a grade» / «Done: …». Где преподаватель отслеживание не
 включил, отметки нет вовсе — тогда done пустой, и это честнее, чем гадать.
 
+Текст лежит не только в label. «Что подготовить к семинару» преподаватель
+пишет и в описании задания, и в странице (`page`) — на странице курса от них
+видно одно название. Поэтому у активностей текущей и следующей недели
+дочитываем их собственную страницу: у assign/quiz/forum описание лежит в
+`#intro.activity-description`, у page — содержимое в `.generalbox` внутри
+`[role=main]`. Только две недели: это по запросу на активность, а нужны те,
+к которым готовятся сейчас.
+
 Всё, что не нашлось, отдаём пустым, а не падаем: страница курса меняется от
 версии к версии, и лучше показать секцию без дат, чем не показать ничего.
 """
@@ -41,6 +49,7 @@ import fast
 
 VIEW = "https://lms.astanait.edu.kz/course/view.php"
 TEXT_LIMIT = 4000        # символов на один текстовый блок — семинар на страницу влезает
+TEXT_TYPES = {"assign", "page", "quiz", "forum"}   # у этих текст на своей странице
 
 VOID = {"br", "img", "input", "hr", "meta", "link", "area", "base", "col", "embed",
         "param", "source", "track", "wbr"}
@@ -127,8 +136,17 @@ def text_of(node, skip=lambda n: False):
             out.append("\n")
 
     rec(node)
-    lines = [" ".join(line.split()) for line in "".join(out).split("\n")]
-    return "\n".join(l for l in lines if l).strip()
+    lines = []
+    for line in "".join(out).split("\n"):
+        line = " ".join(line.split())
+        if not line:
+            continue
+        # <li><p>…</p></li> — маркер остался бы на своей строке
+        if lines and lines[-1] == "•":
+            lines[-1] = "• " + line
+        else:
+            lines.append(line)
+    return "\n".join(lines).strip()
 
 
 def _dates(node):
@@ -215,11 +233,11 @@ def parse(html):
     return out
 
 
-def fetch(courseid):
+def _get(url, params=None):
     jar = fast._cookies("lms", "astanait")
     if "MoodleSession" not in jar:
         raise fast.Stale("нет куки MoodleSession")
-    response = requests.get(VIEW, params={"id": courseid},
+    response = requests.get(url, params=params,
                             headers={"User-Agent": fast.UA}, cookies=jar, timeout=fast.TIMEOUT)
     if response.status_code == 403:
         raise fast.Stale("WAF ответил 403")
@@ -230,8 +248,37 @@ def fetch(courseid):
     return response.text
 
 
+def fetch(courseid):
+    return _get(VIEW, params={"id": courseid})
+
+
+def body(html, modtype):
+    """Текст активности с её страницы: описание (#intro) или содержимое page."""
+    tree = _Tree()
+    tree.feed(html)
+    # Описание лежит в шапке активности, выше [role=main]; содержимое page — внутри.
+    box = tree.root.find(lambda n: n.attrs.get("id") == "intro" or n.has("activity-description"))
+    if not box and modtype == "page":
+        main = tree.root.find(lambda n: n.attrs.get("role") == "main") or tree.root
+        box = main.find(lambda n: n.has("generalbox"))
+    return text_of(box)[:TEXT_LIMIT] if box else ""
+
+
 def read(courseid):
-    return parse(fetch(courseid))
+    secs = parse(fetch(courseid))
+    cur = next((s["n"] for s in secs if s["current"]), None)
+    for sec in secs:
+        if cur is None or sec["n"] not in (cur, cur + 1):
+            continue
+        for item in sec["items"]:
+            if item["type"] not in TEXT_TYPES or not item["url"]:
+                continue
+            # Не дочиталась одна активность — остальные и сама секция не виноваты.
+            try:
+                item["text"] = body(_get(item["url"]), item["type"])
+            except Exception:
+                pass
+    return secs
 
 
 def digest(courseid, course_title, sections):

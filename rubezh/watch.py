@@ -360,12 +360,15 @@ def compare(old, new):
 def _note_line(prefix, note):
     """Одна строка про блок курса: название со ссылкой или начало текста."""
     where = f"{prefix} <b>{esc(note.get('course'))}</b>, {esc(note.get('section'))}: "
+    text = " ".join((note.get("text") or "").split())
     if note.get("name"):
         body = esc(note["name"])
         if note.get("url"):
             body = f'<a href="{esc(note["url"])}">{body}</a>'
+        # Описание задания или страницы — то, ради чего его читаем: «подготовьте…»
+        if text:
+            body += " — " + esc(text[:200] + ("…" if len(text) > 200 else ""))
         return where + body
-    text = " ".join((note.get("text") or "").split())
     return where + esc(text[:280] + ("…" if len(text) > 280 else ""))
 
 

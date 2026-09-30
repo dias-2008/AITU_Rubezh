@@ -877,7 +877,54 @@ const dateItems = (DATA.key_dates || []).map(d => ({
 const TYPES = { assign: "Задание", assignment: "Задание", quiz: "Тест", forum: "Форум",
                 lesson: "Урок", workshop: "Работа", attendance: "Посещение" };
 allItems.forEach(i => { i.type = i.type || TYPES[i.kind] || "Задание"; });
-const tableItems = allItems.concat(dateItems);
+
+/* ── К занятию ───────────────────────────────────────────────────────────
+   «Прочитайте до занятия», «на практике будет устный опрос, подготовьте…» —
+   это лежит в описании задания или на странице недели (sections.py теперь
+   дочитывает их), а срока в календаре Moodle у этого нет. Или есть, но не
+   тот: у социологии «до субботы», а опрос — на практике во вторник. Срок
+   здесь — ближайшая пара этого курса по расписанию: практика, если текст про
+   практику или семинар, лекция — если про лекцию, иначе любая. Курс с парой
+   сводим по коду: буквы кода — инициалы английского названия (DMCS, ICT, IP)
+   либо его первые буквы (SOC, PSY). Не сошлось — строки нет, текст всё
+   равно виден в карточке недели. Расписание берём из файла, не с правками
+   из браузера: они ниже по коду и на срок пары почти никогда не влияют. */
+const PREP_RE = /before (the )?(class|lecture|seminar|practice|session)|come prepared|get ready|prepar|practice session|seminar|к (практике|семинару|занятию|лекции)|подготов|до занятия/i;
+const STOP = new Set(["and", "of", "to", "the", "for", "in", "a", "an", "on"]);
+const codeOf = s => (String(s || "").match(/^[A-Za-z]+/) || [""])[0].toUpperCase();
+function courseCodes(title) {
+  const words = String(title || "").split(/[^A-Za-z]+/).filter(w => w && !STOP.has(w.toLowerCase()));
+  return words.length ? [words.map(w => w[0]).join("").toUpperCase(), words[0].slice(0, 3).toUpperCase()] : [];
+}
+const prepItems = [];
+{
+  const wd = (today.getDay() + 6) % 7 + 1;                    // 1 = Пн … 7 = Вс
+  const ahead = s => ((s.day - wd) % 7 + 7) % 7;              // 0 — сегодня, 1 — завтра …
+  const soonest = list => list.reduce((a, s) => !a || ahead(s) < ahead(a)
+    || (ahead(s) === ahead(a) && s.start < a.start) ? s : a, null);
+  DATA.courses.forEach(c => {
+    const sec = (c.sections || []).find(s => s.current);
+    if (!sec) return;
+    const codes = courseCodes(c.title);
+    const own = (DATA.schedule || []).filter(s => s.day && codes.includes(codeOf(s.course)));
+    sec.items.forEach(i => {
+      if (!own.length || !i.text || !PREP_RE.test(i.text)) return;
+      const prefer = /practic|seminar|практик|семинар/i.test(i.text) ? /практ|семин|practi|semin/i
+                   : /lecture|лекци/i.test(i.text) ? /лекц|lect/i : null;
+      const s = (prefer && soonest(own.filter(x => prefer.test(x.kind)))) || soonest(own);
+      const d = new Date(today); d.setDate(d.getDate() + ahead(s));
+      const due = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+      prepItems.push({
+        name: i.name || i.text.split("\n")[0].slice(0, 80), due, at: s.start,
+        code: c.code || "", course: c.title, kind: "prep", type: "К занятию",
+        sub: (s.kind || "занятие").toLowerCase() + " · " + DOW[s.day - 1] + " " + s.start
+             + (s.room && !s.online ? " · " + s.room : ""),
+        score: null, max: null, period: null, url: i.url || "",
+      });
+    });
+  });
+}
+const tableItems = allItems.concat(prepItems, dateItems);
 
 const FILTERS = [
   { id: "today", name: "Сегодня", f: i => days(i.due, today) === 0 },
@@ -932,8 +979,8 @@ function draw() {
       name.appendChild(a);
     } else name.textContent = i.name;
     ti.appendChild(name);
-    ti.appendChild(el("div", "t-sub", i.kind === "date"
-      ? (i.span || "")
+    ti.appendChild(el("div", "t-sub", i.kind === "date" ? (i.span || "")
+      : i.kind === "prep" ? i.sub
       : (i.period === "final" ? "итоговый экзамен" : "рубеж " + i.period)));
     tr.appendChild(ti);
     const cs = el("td");
@@ -1212,7 +1259,7 @@ function moodleSection(c, sec, withCourse) {
   h.appendChild(el("span", "sec", sec.name));
   box.appendChild(h);
   const texts = [sec.summary, ...sec.items.filter(i => i.type === "label").map(i => i.text)].filter(Boolean);
-  texts.forEach(t => {
+  const clamped = t => {
     const d = el("div", "mw-t" + (t.length > CLAMP_AT ? " clamp" : ""), t);
     box.appendChild(d);
     if (t.length > CLAMP_AT) {
@@ -1220,7 +1267,8 @@ function moodleSection(c, sec, withCourse) {
       b.onclick = () => { const open = d.classList.toggle("clamp"); b.textContent = open ? "развернуть" : "свернуть"; };
       box.appendChild(b);
     }
-  });
+  };
+  texts.forEach(clamped);
   sec.items.filter(i => i.type !== "label").forEach(i => {
     const row = el("div", "mw-i");
     const kind = MOD_TYPES[i.type] ?? i.type;
@@ -1234,6 +1282,8 @@ function moodleSection(c, sec, withCourse) {
                                    i.done === "done" ? "сделано" : "сделать"));
     if (i.restricted) row.appendChild(el("span", "lock", "🔒 " + i.restricted));
     box.appendChild(row);
+    // Описание задания или содержимое страницы — то, что со страницы курса не видно
+    if (i.text) clamped(i.text);
   });
   if (!texts.length && !sec.items.length) box.appendChild(el("div", "mw-empty", "В этой неделе пока пусто."));
   return box;
