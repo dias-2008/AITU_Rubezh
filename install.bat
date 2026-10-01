@@ -12,6 +12,8 @@ call .venv\Scripts\activate.bat
 python -m pip install --quiet --upgrade pip
 python -m pip install --quiet -r rubezh\requirements.txt -r tg-digest\requirements.txt
 python -m playwright install chromium
+rem туннель для кнопки «Телефон» — заранее, чтобы QR-код появлялся сразу
+python -c "import sys; sys.path.insert(0, 'rubezh'); import phone; print('cloudflared:', phone.cloudflared())" || echo cloudflared не скачался — скачается при первом нажатии «Телефон»
 cd rubezh
 python rubezh.py setup
 pause

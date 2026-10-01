@@ -1,13 +1,16 @@
 """Собрать установщик Windows: python installer/build.py [--no-installer]
 
-Три шага, каждый можно повторить отдельно:
+Четыре шага, каждый можно повторить отдельно:
 
   1. PyInstaller по installer/rubezh.spec  ->  installer/dist/AITU Rubezh/
      четыре exe + _internal/ с Python, пакетами и драйвером Playwright
   2. Chromium для Playwright                ->  .../AITU Rubezh/browsers/
      тот же `playwright install chromium`, но в папку рядом с exe: paths.py
      выставляет PLAYWRIGHT_BROWSERS_PATH туда, и у студента ничего не качается
-  3. Inno Setup по installer/setup.iss      ->  installer/out/AITU-Rubezh-Setup-<версия>.exe
+  3. cloudflared                            ->  .../AITU Rubezh/cloudflared.exe
+     туннель для кнопки «Телефон» (phone.py): чтобы QR-код появлялся сразу,
+     а не после скачивания 55 МБ при первом нажатии. Apache-2.0, лицензия рядом
+  4. Inno Setup по installer/setup.iss      ->  installer/out/AITU-Rubezh-Setup-<версия>.exe
 
 Версия берётся из файла VERSION в корне репозитория (или --version). Так же
 это делает GitHub Actions на тег v* — см. .github/workflows/release.yml.
@@ -23,11 +26,14 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from urllib.request import urlretrieve
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent
 DIST = HERE / "dist" / "AITU Rubezh"
 OUT = HERE / "out"
+CLOUDFLARED = "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe"
+CLOUDFLARED_LICENSE = "https://raw.githubusercontent.com/cloudflare/cloudflared/master/LICENSE"
 
 ISCC_CANDIDATES = [
     Path(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")) / "Inno Setup 6" / "ISCC.exe",
@@ -67,6 +73,14 @@ def step_browsers():
         raise SystemExit("Chromium не установился в " + str(target))
 
 
+def step_cloudflared():
+    exe = DIST / "cloudflared.exe"
+    print("+ cloudflared ->", exe, flush=True)
+    urlretrieve(CLOUDFLARED, exe)
+    urlretrieve(CLOUDFLARED_LICENSE, DIST / "cloudflared-LICENSE.txt")
+    run([exe, "--version"])
+
+
 def step_installer(ver):
     iscc = shutil.which("ISCC") or next((str(p) for p in ISCC_CANDIDATES if p.exists()), None)
     if not iscc:
@@ -91,7 +105,7 @@ def main():
         sys.stdout.reconfigure(encoding="utf-8")   # вывод Inno и наш — в одну консоль cp1252
     parser = argparse.ArgumentParser()
     parser.add_argument("--version")
-    parser.add_argument("--no-installer", action="store_true", help="только PyInstaller и Chromium")
+    parser.add_argument("--no-installer", action="store_true", help="только PyInstaller, Chromium и cloudflared")
     parser.add_argument("--skip-pyinstaller", action="store_true", help="dist/ уже собран")
     args = parser.parse_args()
 
@@ -99,6 +113,7 @@ def main():
     if not args.skip_pyinstaller:
         step_pyinstaller()
         step_browsers()
+        step_cloudflared()
         smoke()
     if not args.no_installer:
         if sys.platform != "win32":

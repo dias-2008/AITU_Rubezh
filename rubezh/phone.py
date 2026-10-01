@@ -64,14 +64,21 @@ def _asset():
     return f"cloudflared-linux-{arch}"
 
 
-def _cloudflared(say):
-    """Путь к cloudflared: уже установленный или скачанный нами в bin/."""
+def cloudflared(say=lambda _state: None):
+    """Путь к cloudflared, при необходимости скачав его в bin/.
+
+    Установщик кладёт cloudflared.exe рядом с rubezh.exe, install.bat и
+    install.sh скачивают его заранее — сюда же, вызовом этой функции. Качать
+    при первом нажатии «Телефон» остаётся только на самый крайний случай.
+    """
+    name = "cloudflared.exe" if paths.WINDOWS else "cloudflared"
+    for exe in (paths.APP / name, BIN / name):
+        if exe.exists():
+            return str(exe)
     found = shutil.which("cloudflared")
     if found:
         return found
-    exe = BIN / ("cloudflared.exe" if paths.WINDOWS else "cloudflared")
-    if exe.exists():
-        return str(exe)
+    exe = BIN / name
 
     import requests
     say("downloading")
@@ -165,7 +172,7 @@ class Phone:
         def say(state):
             self.tunnel_state = state
         try:
-            exe = _cloudflared(say)
+            exe = cloudflared(say)
             say("starting")
             TUNNEL_LOG.parent.mkdir(exist_ok=True)
             log = TUNNEL_LOG.open("wb")

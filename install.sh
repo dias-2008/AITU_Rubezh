@@ -22,6 +22,8 @@ python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' || {
 python -m pip install --quiet --upgrade pip
 python -m pip install --quiet -r rubezh/requirements.txt -r tg-digest/requirements.txt
 python -m playwright install chromium
+# туннель для кнопки «Телефон» — заранее, чтобы QR-код появлялся сразу
+python -c "import sys; sys.path.insert(0, 'rubezh'); import phone; print('cloudflared:', phone.cloudflared())" || echo "cloudflared не скачался — скачается при первом нажатии «Телефон»"
 
 cd rubezh
 exec python rubezh.py setup
