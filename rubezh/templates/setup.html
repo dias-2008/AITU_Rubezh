@@ -171,6 +171,10 @@ function steps() {
     list.push({id: 'shortcut', done: d('shortcut'), title: 'Ярлык на рабочем столе',
       desc: 'Двойной клик пересобирает дашборд свежими данными и открывает его.',
       act: btn('shortcut', 'Положить ярлык', d('shortcut'))});
+    if (S.windows)
+      list.push({id: 'start_menu', done: d('start_menu'), title: 'Ярлык в меню «Пуск»',
+        desc: 'Дашборд найдётся поиском по «Rubezh». Правый клик по ярлыку — «Закрепить на начальном экране» или «на панели задач».',
+        act: btn('start_menu', 'Добавить в «Пуск»', d('start_menu'))});
     list.push({id: 'protocol', done: d('protocol'), title: 'Кнопка «Войти» на дашборде',
       desc: 'Когда сессия истечёт, на дашборде появится кнопка, которая откроет окно входа прямо оттуда.',
       act: btn('protocol', 'Включить', d('protocol'))});

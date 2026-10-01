@@ -143,6 +143,16 @@ def step_shortcut():
         return False
 
 
+def step_start_menu():
+    import desktop
+    print("Ярлык в меню «Пуск»: дашборд найдётся поиском по «Rubezh», а правым кликом")
+    print("по ярлыку его можно закрепить на начальном экране или на панели задач.")
+    if not _ask("Добавить?"):
+        return False
+    print("Ярлык:", desktop.start_menu_shortcut())
+    return True
+
+
 def step_protocol():
     import desktop
     if paths.FROZEN and paths.WINDOWS:
@@ -229,6 +239,7 @@ def run():
         ("Почта Outlook (по желанию)", step_outlook),
         ("Расписание и силлабусы группы", step_group),
         ("Ярлык на рабочем столе", step_shortcut),
+        *([("Ярлык в меню «Пуск»", step_start_menu)] if paths.WINDOWS and not paths.FROZEN else []),
         ("Кнопка «Войти» на дашборде", step_protocol),
         ("Уведомления в Telegram раз в час", step_telegram),
         ("Собрать и открыть дашборд", step_build),

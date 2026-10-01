@@ -57,13 +57,22 @@ def shortcut(title="AITU Rubezh", args=("open",), description="Пересобр�
     return _shortcut_macos(title, args)
 
 
-def _shortcut_windows(title, args, description):
+def start_menu_shortcut(title="AITU Rubezh", args=("open",), description="Пересобрать дашборд и открыть"):
+    """Тот же ярлык в меню «Пуск» (только Windows). Закрепить плиткой программно
+    Windows не даёт — ярлык появится во «Все приложения» и в поиске, а закрепить
+    можно правым кликом. Возвращает путь к ярлыку."""
+    if not paths.WINDOWS:
+        raise Unsupported("Меню «Пуск» есть только на Windows.")
+    return _shortcut_windows(title, args, description, folder="Programs")
+
+
+def _shortcut_windows(title, args, description, folder="Desktop"):
     # WindowStyle 7 — свёрнутое окно консоли: оно нужно только чтобы показать
     # ошибку, если сборка упадёт, а в обычной жизни мелькать не должно.
     target, *rest = paths.python()
     icon = paths.ICON
     script = (
-        "$d=[Environment]::GetFolderPath('Desktop');"
+        f"$d=[Environment]::GetFolderPath('{folder}');"
         f"$l=Join-Path $d '{title}.lnk';"
         "$s=(New-Object -ComObject WScript.Shell).CreateShortcut($l);"
         f"$s.TargetPath='{target}';"

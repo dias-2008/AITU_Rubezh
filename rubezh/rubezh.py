@@ -9,7 +9,7 @@
     python rubezh.py ics              постоянная ссылка на календарь Moodle
     python rubezh.py build [--demo]   собрать дашборд (--demo — на выдуманных данных)
     python rubezh.py open             пересобрать и открыть в браузере
-    python rubezh.py shortcut         положить ярлык на рабочий стол
+    python rubezh.py shortcut         положить ярлык на рабочий стол (на Windows — и в «Пуск»)
     python rubezh.py register         включить кнопки «Войти» на дашборде
     python rubezh.py serve [порт]     собрать и раздать (только этот компьютер)
     python rubezh.py serve --lan      ... и открыть для телефона в этой же сети
@@ -260,9 +260,11 @@ def cmd_unregister(_args):
 
 
 def cmd_shortcut(_args):
-    """Положить ярлык на рабочий стол."""
+    """Положить ярлык на рабочий стол, а на Windows — ещё и в меню «Пуск»."""
     import desktop
     print("Ярлык на рабочем столе создан:", desktop.shortcut())
+    if paths.WINDOWS:
+        print("Ярлык в меню «Пуск» создан:", desktop.start_menu_shortcut())
     return 0
 
 

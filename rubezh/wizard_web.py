@@ -74,6 +74,11 @@ def act_shortcut(_body):
     return True, f"Ярлык: {desktop.shortcut()}"
 
 
+def act_start_menu(_body):
+    import desktop
+    return True, f"Ярлык: {desktop.start_menu_shortcut()}"
+
+
 def act_protocol(_body):
     import desktop
     desktop.register_protocol()
@@ -115,6 +120,7 @@ ACTIONS = {
     "outlook": act_login("outlook"),
     "group": act_group,
     "shortcut": act_shortcut,
+    "start_menu": act_start_menu,
     "protocol": act_protocol,
     "token": act_token,
     "telegram": act_telegram,
@@ -156,6 +162,7 @@ class Wizard:
             # Ярлык и схему rubezh:// в установленной версии уже положил установщик.
             "installed": paths.FROZEN and paths.WINDOWS,
             "desktop": paths.WINDOWS or paths.MACOS,
+            "windows": paths.WINDOWS,
             "lms": fast.alive("lms"),
             "du": fast.alive("du"),
             "groups": [g.name for g in groups],
