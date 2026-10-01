@@ -47,6 +47,8 @@ state.json
 
 # --- сборка и мусор ---------------------------------------------------------
 build/
+# rubezh/bin/: cloudflared, скачанный для `rubezh.py phone`
+rubezh/bin/
 __pycache__/
 *.pyc
 .DS_Store
@@ -73,3 +75,4 @@ docs/ict-assignment/
 installer/dist/
 installer/build/
 installer/out/
+.gstack/

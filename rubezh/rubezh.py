@@ -13,6 +13,7 @@
     python rubezh.py register         включить кнопки «Войти» на дашборде
     python rubezh.py serve [порт]     собрать и раздать (только этот компьютер)
     python rubezh.py serve --lan      ... и открыть для телефона в этой же сети
+    python rubezh.py phone            открыть дашборд на телефоне по QR-коду (туннель)
     python rubezh.py telegram         запомнить, кому слать уведомления
     python rubezh.py telegram --chat-id <id>   указать получателя явно
     python rubezh.py syllabus <файл>  вынуть задания и веса из силлабуса
@@ -202,6 +203,9 @@ def cmd_protocol(args):
         raise SystemExit(f"Не наша ссылка: {url[:60]}")
 
     parts = [p for p in url[len(prefix):].strip("/").split("/") if p]
+    if parts == ["phone"]:
+        import phone
+        return phone.run()
     if len(parts) != 2 or parts[0] != "login":
         raise SystemExit(f"Не понимаю, что делать: {url[:60]}")
 
@@ -274,6 +278,11 @@ def cmd_serve(args):
     web.serve(int(ports[0]) if ports else 8000, lan="--lan" in args,
               demo="--demo" in args)
     return 0
+
+
+def cmd_phone(_args):
+    import phone
+    return phone.run()
 
 
 def cmd_telegram(args):
@@ -391,7 +400,7 @@ def cmd_setup(args):
 COMMANDS = {"setup": cmd_setup, "open": cmd_open, "shortcut": cmd_shortcut, "syllabus": cmd_syllabus,
             "schedule": cmd_schedule, "protocol": cmd_protocol, "register": cmd_register,
             "unregister": cmd_unregister, "watch": cmd_watch, "telegram": cmd_telegram,
-            "build": cmd_build, "serve": cmd_serve, "login": cmd_login, "status": cmd_status,
+            "build": cmd_build, "serve": cmd_serve, "phone": cmd_phone, "login": cmd_login, "status": cmd_status,
             "probe": cmd_probe, "ics": cmd_ics, "sections": cmd_sections}
 
 

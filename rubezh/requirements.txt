@@ -2,3 +2,5 @@ playwright>=1.49
 requests>=2.31
 # силлабусы в PDF (python rubezh.py syllabus)
 pypdf>=4.0
+# QR-код для телефона (python rubezh.py phone)
+segno>=1.6

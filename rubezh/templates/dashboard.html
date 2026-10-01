@@ -78,6 +78,7 @@ a{color:inherit}
 .main{padding:20px 24px 56px;display:flex;flex-direction:column;gap:16px;min-width:0}
 .head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
 .head h1{font-size:22px}
+.head-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .head p{margin:3px 0 0;color:var(--ink-2);font-size:13px}
 
 /* ── Плитки-показатели ──────────────────────────────────────────────────── */
@@ -90,7 +91,7 @@ a{color:inherit}
 .tile .sub{font-size:11.5px;color:var(--ink-3);margin-top:2px}
 
 /* ── Карточки ───────────────────────────────────────────────────────────── */
-.cards{display:grid;grid-template-columns:1.05fr .95fr 1.2fr;gap:12px;align-items:start}
+.cards{display:grid;grid-template-columns:var(--cols,1.05fr .95fr 1.2fr);gap:12px;align-items:start}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
       box-shadow:var(--shadow);overflow:hidden}
 .card-h{display:flex;justify-content:space-between;align-items:center;gap:8px;
@@ -141,7 +142,7 @@ a{color:inherit}
 .pill.acc{background:var(--accent-soft);color:var(--accent-ink)}
 
 /* ── Задания + расписание ───────────────────────────────────────────────── */
-.split{display:grid;grid-template-columns:minmax(0,1fr) 296px;gap:12px;align-items:start}
+.split{display:grid;grid-template-columns:var(--cols,minmax(0,1fr) 296px);gap:12px;align-items:start}
 .tabs{display:flex;gap:2px;flex-wrap:wrap}
 .tab{background:none;border:0;padding:4px 9px;border-radius:7px;font:inherit;font-size:12px;
      color:var(--ink-2);cursor:pointer}
@@ -366,7 +367,7 @@ tbody tr:hover{background:var(--surface-2)}
       background:var(--warn-soft);color:var(--warn);font-size:12.5px;font-weight:500}
 
 /* ── Телефон ────────────────────────────────────────────────────────────── */
-@media (max-width:1080px){ .cards{grid-template-columns:1fr 1fr} .cards .card:last-child{grid-column:1/-1}
+@media (max-width:1080px){ .cards{grid-template-columns:var(--cols,1fr 1fr)} .cards .card:last-child{grid-column:1/-1}
   .split{grid-template-columns:1fr} .tiles{grid-template-columns:repeat(2,1fr)} }
 @media (max-width:760px){
   .shell{grid-template-columns:1fr}
@@ -404,7 +405,7 @@ tbody tr:hover{background:var(--surface-2)}
         <h1 id="hello"></h1>
         <p id="context"></p>
       </div>
-      <div class="eyebrow" id="todayLbl"></div>
+      <div class="head-r"><span class="eyebrow" id="todayLbl"></span><span id="headActs"></span></div>
     </header>
 
     <section class="tiles" id="tiles" data-page="home"></section>
@@ -559,11 +560,12 @@ document.querySelectorAll("[data-page]").forEach(node => {
 });
 /* Сетки свёрстаны под три и две карточки. Если на этой странице от секции
    осталась одна, колонки надо пересобрать — иначе карточка жмётся в треть
-   ширины, а рядом зияет пустота от спрятанных соседей. */
+   ширины, а рядом зияет пустота от спрятанных соседей. Через переменную, а не
+   инлайн-стилем: инлайн перебил бы @media, и на телефоне остались бы колонки. */
 document.querySelectorAll("section.cards, section.split").forEach(sec => {
   const shown = [...sec.children].filter(n => n.style.display !== "none").length;
   if (shown && shown < sec.children.length)
-    sec.style.gridTemplateColumns = "repeat(" + shown + ", minmax(0,1fr))";
+    sec.style.setProperty("--cols", "repeat(" + shown + ", minmax(0,1fr))");
 });
 if (PAGE !== "home") document.title = "AITU Rubezh — " + here.name;
 
@@ -612,6 +614,7 @@ if (offline.length) {
 /* Сессия протухла — кнопка прямо здесь. Дашборд лежит на диске и сам ничего
    запустить не может, поэтому ссылка своей схемы rubezh://, которую Windows
    отдаёт нашему же скрипту. Схему включает `python rubezh.py register`. */
+const FROM_DISK = location.protocol === "file:";
 const need = DATA.needs_login || [];
 if (need.length) {
   /* Одна полоса и одна кнопка на всё, даже если протухли обе сессии: иначе
@@ -629,7 +632,12 @@ if (need.length) {
   hint.textContent = hintText;
   txt.appendChild(hint);
   box.appendChild(txt);
+  /* С телефона ссылка rubezh:// никуда не ведёт: окно входа открывается на
+     компьютере. Перезагрузки ниже остаются — войдёшь там, обновится и здесь. */
+  if (!FROM_DISK) hint.textContent = "Войди на компьютере: открой там дашборд и нажми «Войти». "
+    + "Эта страница обновится сама.";
   const btn = el("a", "btn");
+  if (!FROM_DISK) btn.hidden = true;
   btn.href = "rubezh://login/" + (need.length > 1 ? "all" : encodeURIComponent(need[0]));
   btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>'
     + '<path d="M10 17l5-5-5-5M15 12H3"/></svg>';
@@ -1746,6 +1754,45 @@ DATA.courses.forEach(c => {
   card.appendChild(r);
   box.appendChild(card);
 });
+
+/* ── Телефон ───────────────────────────────────────────────────────────── */
+/* С диска — кнопка, которая поднимает раздачу и показывает QR-код (rubezh://phone,
+   см. phone.py). С раздачи — кнопка «Обновить»: телефон просит компьютер
+   пересобрать данные. У старого `serve --lan` такого адреса нет — кнопки не будет. */
+const acts = document.getElementById("headActs");
+if (FROM_DISK) {
+  const b = el("a", "btn ghost");
+  b.href = "rubezh://phone";
+  b.title = "Открыть дашборд на телефоне по QR-коду";
+  b.innerHTML = '<svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>';
+  b.appendChild(document.createTextNode("Телефон"));
+  acts.appendChild(b);
+} else {
+  fetch("api/state", { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(s => {
+    if (!s) return;
+    const b = el("button", "btn ghost");
+    b.type = "button";
+    const label = document.createTextNode("Обновить");
+    b.innerHTML = '<svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>';
+    b.appendChild(label);
+    acts.appendChild(b);
+    const busy = () => { b.classList.add("waiting"); label.textContent = "Собираю…"; };
+    const watch = () => setTimeout(async () => {
+      try {
+        const st = await (await fetch("api/state", { cache: "no-store" })).json();
+        if (st.building) return watch();
+        if (st.build_failed) { b.classList.remove("waiting"); label.textContent = "Не вышло — ещё раз"; return; }
+        location.reload();
+      } catch (e) { watch(); }
+    }, 3000);
+    b.onclick = async () => {
+      busy();
+      try { await fetch("api/refresh", { method: "POST" }); } catch (e) {}
+      watch();
+    };
+    if (s.building) { busy(); watch(); }
+  }).catch(() => {});
+}
 
 /* ── Тема ──────────────────────────────────────────────────────────────── */
 document.getElementById("themeBtn").onclick = () => {

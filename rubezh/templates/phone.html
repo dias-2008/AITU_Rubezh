@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Телефон — AITU Rubezh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Токены — те же, что в dashboard.html и setup.html. */
+:root{
+  --bg:#F6F7F9; --surface:#FFFFFF; --surface-2:#F0F2F5;
+  --border:#E2E6EC; --border-strong:#CFD6DE;
+  --ink:#141A20; --ink-2:#59656F; --ink-3:#8A95A1;
+  --accent:#0E7C86; --accent-ink:#0A5C64; --accent-soft:#DFF0F1; --on-accent:#FFFFFF;
+  --warn:#8F6210; --warn-soft:#F7EBD6;
+  --bad:#A5342A; --bad-soft:#F8E3E0;
+  --shadow:0 1px 2px rgba(20,26,32,.05), 0 1px 3px rgba(20,26,32,.04);
+  --r:10px;
+  --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --sans:"Golos Text",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0E1215; --surface:#161B21; --surface-2:#1B222A;
+    --border:#28313A; --border-strong:#3A4550;
+    --ink:#E7EDF3; --ink-2:#9BA7B3; --ink-3:#6C7784;
+    --accent:#3FB2BC; --accent-ink:#7FD3DA; --accent-soft:#123037; --on-accent:#0E1215;
+    --warn:#D69B45; --warn-soft:#302516;
+    --bad:#E07A6B; --bad-soft:#33201D;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.3);
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+     font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1{margin:0;font-weight:600;letter-spacing:-.01em;font-size:24px}
+.wrap{max-width:520px;margin:0 auto;padding:32px 16px 64px}
+.brand{display:flex;align-items:center;gap:9px;margin-bottom:26px}
+.mark{width:26px;height:26px;border-radius:7px;background:var(--accent);flex:none;
+      display:grid;place-items:center;color:#fff;font-family:var(--mono);font-weight:600;font-size:13px}
+.brand b{font-size:14.5px;font-weight:600;letter-spacing:-.02em}
+.lead{margin:4px 0 20px;color:var(--ink-2)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+      box-shadow:var(--shadow);padding:22px;text-align:center}
+/* QR всегда тёмный на белом: в тёмной теме инвертированный код читают не все камеры. */
+.qr{display:inline-block;background:#fff;padding:6px;border-radius:8px;line-height:0}
+.qr svg{max-width:100%;height:auto}
+.url{margin:14px 0 0;font-family:var(--mono);font-size:11.5px;color:var(--ink-3);word-break:break-all}
+.wait{display:flex;align-items:center;justify-content:center;gap:9px;padding:60px 0;color:var(--accent-ink)}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--accent-soft);
+      border-top-color:var(--accent);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.note{margin:14px 0 0;font-size:12.5px;padding:8px 11px;border-radius:7px;text-align:left}
+.note.warn{background:var(--warn-soft);color:var(--warn)}
+.note.bad{background:var(--bad-soft);color:var(--bad)}
+ul{margin:18px 0 0;padding-left:20px;color:var(--ink-2);font-size:13px}
+li{margin:3px 0}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:22px;flex-wrap:wrap}
+.foot small{color:var(--ink-3);font-size:12px}
+button{font:inherit;font-size:13px;font-weight:500;border-radius:7px;padding:7px 14px;cursor:pointer;
+       background:none;color:var(--bad);border:1px solid var(--border-strong)}
+button:hover:not(:disabled){border-color:var(--bad)}
+button:disabled{opacity:.5;cursor:default}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><div class="mark">Р</div><b>AITU Rubezh</b></div>
+  <h1>Дашборд на телефоне</h1>
+  <p class="lead">Наведи камеру телефона на код — откроется твой дашборд. Компьютер
+    работает сервером: пока он включён и раздача не остановлена, дашборд открывается.</p>
+
+  <div class="card" id="card"><div class="wait"><i class="spin"></i><span id="waitText">Запускаю…</span></div></div>
+  <div id="notes"></div>
+
+  <ul id="tips"></ul>
+
+  <div class="foot">
+    <small id="updated"></small>
+    <button id="stop" type="button">Остановить раздачу</button>
+  </div>
+</div>
+
+<script>
+const card = document.getElementById("card");
+const notes = document.getElementById("notes");
+const tips = document.getElementById("tips");
+let shown = null;              // адрес, для которого уже нарисован код
+let timer = null;
+
+const WAIT = {
+  downloading: "Скачиваю cloudflared — один раз, около 40 МБ…",
+  starting: "Поднимаю туннель — секунд десять…",
+};
+const TIPS = {
+  tunnel: [
+    "Работает с любого интернета: Wi-Fi университета, мобильный, домашний.",
+    "Адрес новый при каждом запуске — после перезагрузки компьютера сканируй заново.",
+    "Кнопка «Обновить» на телефоне пересобирает данные на компьютере.",
+    "Не пересылай ссылку: по ней видны оценки и посещаемость.",
+  ],
+  lan: [
+    "Телефон должен быть в той же сети Wi-Fi, что и компьютер.",
+    "В университетском Wi-Fi устройства часто не видят друг друга — тогда не откроется.",
+    "Если Windows спросит про брандмауэр — разреши доступ в частных сетях.",
+    "Не пересылай ссылку: по ней видны оценки и посещаемость.",
+  ],
+};
+
+function note(kind, text) {
+  const p = document.createElement("p");
+  p.className = "note " + kind;
+  p.textContent = text;
+  notes.appendChild(p);
+}
+
+async function tick() {
+  let s;
+  try {
+    s = await (await fetch("api/state", { cache: "no-store" })).json();
+  } catch (e) {
+    card.innerHTML = '<div class="wait">Раздача остановлена. Нажми «Телефон» на дашборде, чтобы запустить снова.</div>';
+    document.getElementById("stop").disabled = true;
+    tips.innerHTML = "";
+    return;
+  }
+  if (s.url) {
+    if (shown !== s.url) {
+      shown = s.url;
+      card.innerHTML = '<div class="qr">' + s.qr + '</div>';
+      const u = document.createElement("p");
+      u.className = "url";
+      u.textContent = s.url;
+      card.appendChild(u);
+      tips.innerHTML = "";
+      TIPS[s.via].forEach(t => { const li = document.createElement("li"); li.textContent = t; tips.appendChild(li); });
+    }
+  } else if (s.tunnel === "failed") {
+    card.innerHTML = '<div class="wait">Не вышло ни через туннель, ни через локальную сеть: компьютер не подключён к сети.</div>';
+  } else {
+    document.getElementById("waitText").textContent = WAIT[s.tunnel] || "Запускаю…";
+  }
+  notes.innerHTML = "";
+  if (s.via === "lan") note("warn", "Туннель не поднялся (" + s.error + "), поэтому код — для локальной сети.");
+  if (s.building) note("warn", "Дашборд пересобирается…");
+  if (s.build_failed) note("bad", "Последняя пересборка не удалась. Открой ярлык AITU Rubezh на компьютере — там будет видно, что не так.");
+  document.getElementById("updated").textContent = s.updated ? "Данные от " + s.updated : "";
+  timer = setTimeout(tick, s.url && !s.building ? 5000 : 1000);
+}
+
+document.getElementById("stop").onclick = async () => {
+  clearTimeout(timer);
+  try { await fetch("api/stop", { method: "POST" }); } catch (e) {}
+  setTimeout(tick, 500);
+};
+
+tick();
+</script>
+</body>
+</html>

@@ -8,3 +8,5 @@ watch.log
 localstorage.json
 syllabus.json
 schedule.json
+# cloudflared, скачанный для `rubezh.py phone`
+bin/
