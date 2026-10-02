@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """Дайджест важных сообщений из университетских Telegram-групп.
 
-  python digest.py setup     — мастер: ключи, модель, вход в Telegram, чаты, планировщик
+  python digest.py setup     — мастер в браузере: ключи, модель, вход в Telegram, чаты, планировщик
+  python digest.py setup --cli — то же вопросами в консоли
   python digest.py chats     — показать твои группы и их id (для config.json)
   python digest.py run       — собрать новые сообщения, выжать важное, прислать в бота
   python digest.py run --dry — то же самое, но напечатать в консоль и не двигать state
@@ -372,10 +373,6 @@ async def main():
                         help="чей дайджест: своя сессия, свои чаты, свой прогресс")
     args = parser.parse_args()
 
-    if args.command == "setup":
-        import setup
-        return setup.main(args.profile)
-
     directory = profile_dir(args.profile)
     llm.set_usage_log(directory / "usage.log")
     _log_to_file(directory / "digest.log")
@@ -405,8 +402,27 @@ async def main():
         await client.disconnect()
 
 
+def setup_command(argv):
+    """`setup` — мастер в браузере, `setup --cli` — вопросами в консоли.
+
+    Отдельно и ДО asyncio.run: мастер сам гоняет свой цикл событий (вход в
+    Telegram), а внутри уже запущенного цикла asyncio.run падает.
+    """
+    profile = argv[argv.index("--profile") + 1] if "--profile" in argv[:-1] else "default"
+    if "--cli" in argv:
+        import setup
+        return setup.main(profile)
+    import setup_web
+    return setup_web.run(profile)
+
+
 if __name__ == "__main__":
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
         sys.stderr.reconfigure(encoding="utf-8")
+    argv = sys.argv[1:]
+    if not argv and getattr(sys, "frozen", False):
+        argv = ["setup"]          # двойной клик по digest.exe — это настройка
+    if argv[:1] == ["setup"]:
+        sys.exit(setup_command(argv))
     sys.exit(asyncio.run(main()))

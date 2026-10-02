@@ -19,21 +19,22 @@ RUBEZH = REPO / "rubezh"
 DIGEST = REPO / "tg-digest"
 ICON = str(RUBEZH / "icon.ico")
 
-# Файлы, которые код читает с диска: шаблон дашборда, пример конфига дайджеста.
+# Файлы, которые код читает с диска: шаблоны дашборда, мастер и пример конфига дайджеста.
 # Кладутся под теми же именами папок, что в репозитории, — paths.ASSETS и
 # llm.ASSETS смотрят именно туда.
 DATAS = [
     (str(RUBEZH / "templates"), "rubezh/templates"),
     (str(DIGEST / "config.example.json"), "tg-digest"),
     (str(DIGEST / ".env.example"), "tg-digest"),
+    (str(DIGEST / "setup.html"), "tg-digest"),
 ]
 
 # Модули, которые импортируются внутри функций или через try/except и которых
 # статический анализ может не увидеть. Перечислить лишнее не страшно.
 HIDDEN = [
-    "aitu", "demo", "desktop", "du", "fast", "grade", "journal", "live", "moodle",
+    "aitu", "demo", "desktop", "du", "fast", "grade", "journal", "live", "machine", "moodle",
     "notify", "outlook", "paths", "phone", "session", "syllabus", "watch", "web", "wizard", "wizard_web",
-    "llm", "digest", "setup", "pypdf", "segno",
+    "llm", "digest", "setup", "setup_web", "pypdf", "segno",
 ]
 
 common = dict(

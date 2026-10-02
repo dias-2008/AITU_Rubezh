@@ -1,4 +1,7 @@
-"""Мастер настройки дайджеста. Запусти один раз: python setup.py  (или digest.py setup)
+"""Мастер настройки дайджеста — консольный: python setup.py --cli  (или digest.py setup --cli)
+
+Обычный путь теперь — мастер в браузере (setup_web.py): python setup.py или
+digest.py setup. Этот остался для SSH и для тех, кому терминал удобнее.
 
 По шагам: ключи Telegram и токен бота в .env, чем суммаризировать, вход в
 Telegram своим аккаунтом, выбор групп по номерам, задача в планировщике раз в
@@ -366,4 +369,9 @@ if __name__ == "__main__":
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
         sys.stderr.reconfigure(encoding="utf-8")
-    sys.exit(main(sys.argv[1] if len(sys.argv) > 1 else "default"))
+    args = [a for a in sys.argv[1:] if a != "--cli"]
+    profile = args[0] if args else "default"
+    if "--cli" in sys.argv:
+        sys.exit(main(profile))
+    import setup_web                       # по умолчанию — мастер в браузере
+    sys.exit(setup_web.run(profile))
