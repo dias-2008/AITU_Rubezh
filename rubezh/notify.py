@@ -63,6 +63,29 @@ def save_token(value):
     return path
 
 
+def check_token(value):
+    """Спросить Telegram, настоящий ли токен, и запомнить имя бота.
+
+    Имя нужно мастеру для кнопки «Открыть моего бота»: искать бота в Telegram
+    по имени — ровно тот шаг, на котором студенты и терялись.
+    """
+    try:
+        reply = requests.get(API.format(token=value.strip(), method="getMe"), timeout=20)
+    except requests.RequestException:
+        raise SystemExit("Не достучался до Telegram — проверь интернет и попробуй ещё раз.")
+    if reply.status_code in (401, 404):
+        raise SystemExit("Telegram не знает такой токен. Скопируй его из @BotFather целиком.")
+    if not reply.ok:
+        raise SystemExit(f"Telegram ответил {reply.status_code}, попробуй ещё раз через минуту.")
+    username = reply.json().get("result", {}).get("username") or ""
+    _save_secret("telegram_bot", username)
+    return username
+
+
+def bot_username():
+    return _secrets().get("telegram_bot") or ""
+
+
 def _secrets():
     import json
     if SECRETS.exists():

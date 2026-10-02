@@ -48,7 +48,8 @@ except ImportError:
     llm = None
 
 # Локальная модель, зашита намеренно: см. докстринг модуля.
-LOCAL = {"backend": "ollama", "ollama_model": "gemma4:e4b"}
+# Какая именно — решает machine.model(): уже скачанная или подходящая по железу.
+LOCAL = {"backend": "ollama"}
 
 PROMPT = (
     "Ниже текст силлабуса университетского курса. Выпиши из него список работ, "
@@ -180,8 +181,10 @@ def _ask(text):
     первый запрос в свежую систему упирается в «connection refused». Поэтому
     будим его явно и пробуем ещё раз, а не показываем человеку трассировку.
     """
+    import machine
+    cfg = dict(LOCAL, ollama_model=machine.model())
     try:
-        return llm.summarize(PROMPT, text, LOCAL)
+        return llm.summarize(PROMPT, text, cfg)
     except Exception as error:
         if "11434" not in str(error) and "refused" not in str(error).lower():
             raise
@@ -192,9 +195,9 @@ def _ask(text):
     except (OSError, subprocess.SubprocessError):
         raise SystemExit(
             "Не нашёл ollama. Разбор идёт локальной моделью — установи ollama "
-            "и модель gemma4:e4b, либо разбери силлабус руками."
+            f"и модель {cfg['ollama_model']}, либо разбери силлабус руками."
         )
-    return llm.summarize(PROMPT, text, LOCAL)
+    return llm.summarize(PROMPT, text, cfg)
 
 
 def parse(text, year=None):

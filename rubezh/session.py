@@ -467,8 +467,24 @@ def refresh(service):
         return True             # ключи снял сам connect, ему для этого хватило
 
 
-def login(service):
-    """Открывает настоящее окно и ждёт, пока человек залогинится."""
+def _to_front(page):
+    """Окно входа — поверх всего, а не значком на панели задач (см. desktop.raise_window)."""
+    try:
+        page.bring_to_front()
+        import desktop
+        import os
+        browsers = os.environ.get("PLAYWRIGHT_BROWSERS_PATH") or "ms-playwright"
+        desktop.raise_window(browsers)
+    except Exception:
+        pass                      # не вышло — окно всё равно есть, просто не спереди
+
+
+def login(service, cancel=None):
+    """Открывает настоящее окно и ждёт, пока человек залогинится.
+
+    cancel — threading.Event: мастер ставит его кнопкой «Отменить», и окно
+    закрывается сразу, без десяти минут ожидания. Отменённый вход — False.
+    """
     spec = SERVICES[service]
     print(f"Открываю {spec['title']}. {spec['hint']}")
     print("Окно закроется само, как только увижу, что ты вошёл.")
@@ -488,9 +504,13 @@ def login(service):
                 except Exception:
                     pass
         page.goto(spec["login_url"], wait_until="domcontentloaded", timeout=120000)
+        _to_front(page)
 
         deadline = time.time() + LOGIN_TIMEOUT_SEC
         while time.time() < deadline:
+            if cancel is not None and cancel.is_set():
+                print("Вход отменён.")
+                return False
             # Человек мог уйти логиниться в соседнюю вкладку — смотрим на все.
             alive = [p for p in context.pages if not p.is_closed()]
             if not alive:

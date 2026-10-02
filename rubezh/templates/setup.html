@@ -68,6 +68,10 @@ button{font:inherit;font-size:13px;font-weight:500;border-radius:7px;padding:7px
        border:1px solid var(--accent);background:var(--accent);color:var(--on-accent)}
 button:hover:not(:disabled){filter:brightness(1.08)}
 button.ghost{background:none;color:var(--accent-ink);border-color:var(--border-strong)}
+/* Ссылка, которая выглядит как кнопка-призрак: открывает Telegram, а не шаг мастера. */
+a.btn{font-size:13px;font-weight:500;border-radius:7px;padding:7px 14px;text-decoration:none;
+      border:1px solid var(--border-strong);color:var(--accent-ink);white-space:nowrap}
+a.btn:hover{border-color:var(--accent)}
 button:disabled{opacity:.5;cursor:default}
 button.big{font-size:15px;padding:11px 22px}
 input,select{font:inherit;font-size:13px;padding:7px 10px;border-radius:7px;min-width:0;
@@ -77,8 +81,9 @@ input{flex:1;font-family:var(--mono)}
 .msg.ok{background:var(--good-soft);color:var(--good)}
 .msg.bad{background:var(--bad-soft);color:var(--bad)}
 .wait{display:flex;align-items:center;gap:8px;margin-top:11px;color:var(--accent-ink);font-size:13px}
+.wait button{margin-left:auto;flex:none}
 .spin{width:14px;height:14px;border-radius:50%;border:2px solid var(--accent-soft);
-      border-top-color:var(--accent);animation:spin .8s linear infinite;flex:none}
+      border-top-color:var(--accent);animation:spin .8s linear infinite;flex:none;display:inline-block;vertical-align:-2px}
 @keyframes spin{to{transform:rotate(360deg)}}
 details.step{display:block}
 details summary{cursor:pointer;font-weight:600;font-size:15px}
@@ -109,9 +114,9 @@ const inputs = {token: '', chat_id: '', group: ''};
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const WAIT = {
   browser: 'Скачиваю Chromium (~150 МБ)…',
-  lms: 'Войди в открывшемся окне — оно закроется само.',
-  du: 'Войди в открывшемся окне — оно закроется само.',
-  outlook: 'Войди в открывшемся окне — оно закроется само.',
+  lms: 'Войди в открывшемся окне — оно закроется само. Не видно окна? Посмотри на панель задач.',
+  du: 'Войди в открывшемся окне — оно закроется само. Не видно окна? Посмотри на панель задач.',
+  outlook: 'Войди в открывшемся окне — оно закроется само. Не видно окна? Посмотри на панель задач.',
   telegram: 'Спрашиваю Telegram…',
   finish: 'Собираю дашборд — это до минуты…',
 };
@@ -187,15 +192,22 @@ function telegram() {
     desc: 'Раз в час программа сама проверит Moodle и портал и напишет, если появилось задание, перенесли срок или истекла сессия.'};
   if (!S.bot) {
     s.id = 'token';
-    s.desc += `<ol><li>В Telegram открой <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a>, отправь <code>/newbot</code>, придумай имя.</li>
-      <li>Скопируй токен вида <code>12345678:AAF…</code> и вставь сюда.</li></ol>`;
-    s.act = `<input placeholder="Токен бота" value="${esc(inputs.token)}" oninput="inputs.token=this.value">` +
+    s.desc += `<br>Нужен свой бот — он будет писать только тебе. Это пара минут:
+      <ol><li>Нажми «Открыть @BotFather» ниже — откроется Telegram. Нажми <b>Start</b>.</li>
+      <li>Отправь <code>/newbot</code>.</li>
+      <li>Имя — любое, например <code>Мой Рубеж</code>.</li>
+      <li>Username — латиницей и в конце <code>bot</code>, например <code>rubezh_${esc((S.group_mine || 'student').toLowerCase().replace(/[^a-z0-9]/g, ''))}_${BOT_SUFFIX}_bot</code>.
+        Занято — добавь ещё цифр.</li>
+      <li>BotFather пришлёт сообщение с токеном вида <code>12345678:AAF…</code> — скопируй его и вставь сюда.</li></ol>`;
+    s.act = `<a class="btn ghost" href="https://t.me/BotFather" target="_blank" rel="noopener">Открыть @BotFather</a>` +
+            `<input placeholder="Токен бота" value="${esc(inputs.token)}" oninput="inputs.token=this.value">` +
             btn('token', 'Сохранить', false, () => ({token: inputs.token}));
   } else if (!s.done) {
     const stuck = msg.telegram && !msg.telegram.ok && /chat-id/.test(msg.telegram.text);
     s.desc += S.chat ? '<br>Бот знает, куда писать, осталось включить проверку.'
-                     : '<br>Открой своего бота в Telegram, нажми <b>Start</b> и отправь ему любое сообщение. Потом жми кнопку.';
-    s.act = (stuck ? `<input placeholder="chat_id из списка выше" value="${esc(inputs.chat_id)}" oninput="inputs.chat_id=this.value">` : '') +
+                     : '<br>Открой своего бота кнопкой ниже и нажми в Telegram <b>Start</b>. Потом вернись сюда и жми «Я написал боту».';
+    s.act = (!S.chat && S.bot_name ? `<a class="btn ghost" href="https://t.me/${esc(S.bot_name)}?start=rubezh" target="_blank" rel="noopener">Открыть @${esc(S.bot_name)}</a>` : '') +
+            (stuck ? `<input placeholder="chat_id из списка выше" value="${esc(inputs.chat_id)}" oninput="inputs.chat_id=this.value">` : '') +
             btn('telegram', S.chat ? 'Включить проверку' : 'Я написал боту', false,
                 () => (inputs.chat_id.trim() ? {chat_id: inputs.chat_id.trim()} : {}));
   } else {
@@ -204,6 +216,42 @@ function telegram() {
   s.extra = msg.token && msg.token.ok && s.id === 'telegram' ? msg.token : null;
   return s;
 }
+
+/* Вход ждёт человека до десяти минут, и всё это время остальные кнопки
+   заблокированы. «Отменить» закрывает окно входа сразу — к шагу можно
+   вернуться потом, особенно к необязательному Outlook. */
+const CANCELABLE = ['lms', 'du', 'outlook'];
+function waiting(id) {
+  const stop = CANCELABLE.includes(id)
+    ? `<button class="ghost" onclick="this.disabled=true;fetch('api/cancel',{method:'POST'})">Отменить</button>` : '';
+  return `<div class="wait"><span class="spin"></span>${esc(WAIT[id] || 'Работаю…')}${stop}</div>`;
+}
+
+/* Совет по модели — по железу этого компьютера (machine.py), а не одна
+   модель на всех: на слабом ноутбуке честнее сказать «пропусти». */
+let LLM = null;          // совет по модели — с сервера, по раскрытию «Почты»
+async function loadLlm() {
+  if (LLM) return;
+  try { LLM = await (await fetch('api/llm')).json(); } catch (e) { return; }
+  const box = document.getElementById('mailAdvice');
+  if (box) box.innerHTML = mailAdvice(LLM);
+}
+document.addEventListener('toggle', e => { if (e.target.tagName === 'DETAILS' && e.target.open) loadLlm(); }, true);
+
+function mailAdvice(a) {
+  if (!a) return '<span class="spin"></span> Смотрю, какая модель подойдёт этому компьютеру…';
+  const pc = `${a.ram_gb} ГБ памяти` + (a.vram_gb >= 1 ? `, видеокарта ${a.vram_gb} ГБ` : '');
+  if (a.have) return `Модель <code>${esc(a.have)}</code> уже скачана — можно входить.`;
+  if (!a.model) return `<b>Этому компьютеру (${pc}) модель будет тяжела</b> — письма разбирались бы
+    минутами и тормозили остальное. Советуем шаг пропустить.`;
+  const get = a.ollama ? '' : `Установи <a href="https://ollama.com/download" target="_blank" rel="noopener">Ollama</a>, потом `;
+  const disk = a.disk_ok ? '' : ` <b>Свободно только ${a.disk_gb} ГБ</b> — сначала освободи место.`;
+  return `Этому компьютеру (${pc}) подойдёт <code>${esc(a.model)}</code>, скачивание ~${a.size_gb} ГБ.
+    ${get}${a.ollama ? 'В' : 'в'}ыполни в терминале: <code>ollama pull ${esc(a.model)}</code>.${disk}`;
+}
+
+// Цифры в примере имени бота — одни на всю вкладку, а не новые на каждой перерисовке.
+const BOT_SUFFIX = Math.floor(Math.random() * 9000 + 1000);
 
 const handlers = {};
 function btn(name, label, ghost = false, body = () => ({})) {
@@ -215,7 +263,7 @@ function card(s, n) {
   const m = msg[s.id] || s.extra;
   const pill = s.done ? '<span class="pill good">Готово</span>'
              : `<span class="pill">${s.must ? 'Нужно' : 'По желанию'}</span>`;
-  const act = busy === s.id ? `<div class="wait"><span class="spin"></span>${esc(WAIT[s.id] || 'Работаю…')}</div>`
+  const act = busy === s.id ? waiting(s.id)
             : s.act ? `<div class="actions">${s.act}</div>` : '';
   return `<section class="step ${s.done ? 'is-done' : ''}">
     <div class="dot">${s.done ? '✓' : n}</div>
@@ -250,10 +298,10 @@ function render() {
     html += card(s, i + 1);
   });
   html += `<details class="step"><summary>Почта Outlook</summary>
-    <p class="desc">Письма университета инструмент читает локальной моделью через Ollama: нужна установленная
-      <a href="https://ollama.com" target="_blank" rel="noopener">Ollama</a> и модель <code>gemma4:e4b</code> (~10 ГБ).
-      Без этого шаг не нужен.</p>
-    ${busy === 'outlook' ? `<div class="wait"><span class="spin"></span>${WAIT.outlook}</div>`
+    <p class="desc">Письма университета инструмент читает локальной моделью через Ollama — на этом
+      компьютере, письма никуда не уходят. Шаг по желанию: дашборд работает и без почты.</p>
+    <p class="desc" id="mailAdvice">${mailAdvice(LLM)}</p>
+    ${busy === 'outlook' ? waiting('outlook')
       : `<div class="actions">${btn('outlook', S.done.includes('outlook') ? 'Войти заново' : 'Войти в Outlook', true)}</div>`}
     ${msg.outlook && busy !== 'outlook' ? `<p class="msg ${msg.outlook.ok ? 'ok' : 'bad'}">${esc(msg.outlook.text)}</p>` : ''}
   </details>`;

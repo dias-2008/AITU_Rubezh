@@ -1,4 +1,10 @@
 <title>AITU Rubezh</title>
+<script>
+/* Тема, выбранная кнопкой, — до первой отрисовки, иначе каждая страница
+   сначала мигнёт системной. Раньше выбор не запоминался вовсе и слетал при
+   переходе на другой раздел: разделы — отдельные файлы. */
+try { const t = localStorage.getItem("rubezh-theme"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
@@ -140,6 +146,25 @@ a{color:inherit}
 .pill.bad{background:var(--bad-soft);color:var(--bad)}
 .pill.mute{background:var(--surface-3);color:var(--ink-2)}
 .pill.acc{background:var(--accent-soft);color:var(--accent-ink)}
+
+/* ── Главная: короткий список дел ──────────────────────────────────────── */
+.todo-list{display:flex;flex-direction:column}
+.todo-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--border)}
+.todo-row:first-child{border-top:0}
+.todo-row .verb{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;
+               text-transform:uppercase;color:var(--ink-3);width:92px;flex:none}
+.todo-row .what{flex:1;min-width:0;font-size:14.5px;line-height:1.35}
+.todo-row .what a{color:inherit;text-decoration:none;border-bottom:1px solid var(--border-strong)}
+.todo-row .what a:hover{border-bottom-color:var(--accent)}
+.todo-row .what small{display:block;color:var(--ink-3);font-size:12px;margin-top:2px}
+.todo-row .pill{flex:none}
+.todo-more{display:block;padding:11px 16px;border-top:1px solid var(--border);font-size:13px;
+           color:var(--accent-ink);text-decoration:none;font-weight:500}
+.todo-empty{padding:22px 16px;color:var(--ink-2);font-size:14px}
+@media (max-width:760px){
+  .todo-row{flex-wrap:wrap;gap:4px 10px;padding:12px 14px}
+  .todo-row .verb{width:auto;flex-basis:100%}
+}
 
 /* ── Задания + расписание ───────────────────────────────────────────────── */
 .split{display:grid;grid-template-columns:var(--cols,minmax(0,1fr) 296px);gap:12px;align-items:start}
@@ -408,15 +433,20 @@ tbody tr:hover{background:var(--surface-2)}
       <div class="head-r"><span class="eyebrow" id="todayLbl"></span><span id="headActs"></span></div>
     </header>
 
-    <section class="tiles" id="tiles" data-page="home"></section>
+    <section class="card todo" id="todo" data-page="home">
+      <div class="card-h"><h2>Что сделать</h2><span class="eyebrow" id="todoLbl"></span></div>
+      <div class="todo-list" id="todoList"></div>
+    </section>
 
-    <section class="cards" data-page="home dates grades">
-      <div class="card" id="dates" data-page="home dates">
+    <section class="tiles" id="tiles" data-page="grades"></section>
+
+    <section class="cards" data-page="dates grades">
+      <div class="card" id="dates" data-page="dates">
         <div class="card-h"><h2>Ключевые даты</h2><span class="eyebrow">триместр</span></div>
         <div class="card-b"><div class="dates" id="keyDates"></div></div>
       </div>
 
-      <div class="card" data-page="home dates">
+      <div class="card" data-page="dates">
         <div class="card-h"><h2>Нагрузка</h2><span class="eyebrow" id="monLbl"></span></div>
         <div class="card-b">
           <div class="mon" id="month"></div>
@@ -430,14 +460,14 @@ tbody tr:hover{background:var(--surface-2)}
         </div>
       </div>
 
-      <div class="card" data-page="home grades">
+      <div class="card" data-page="grades">
         <div class="card-h"><h2>Допуск к экзаменам</h2><span class="eyebrow">рубежи</span></div>
         <div class="card-b"><div class="gates" id="gates"></div></div>
       </div>
     </section>
 
-    <section class="split" data-page="home tasks schedule">
-      <div class="card" id="tasks" data-page="home tasks">
+    <section class="split" data-page="tasks schedule">
+      <div class="card" id="tasks" data-page="tasks">
         <div class="card-h"><h2>Задания</h2><div class="tabs" id="tabs"></div></div>
         <div class="tw"><table>
           <thead><tr><th>Статус</th><th>Срок</th><th>Задание</th><th>Курс</th><th>Тип</th><th>Балл</th></tr></thead>
@@ -445,7 +475,7 @@ tbody tr:hover{background:var(--surface-2)}
         </table></div>
       </div>
 
-      <div class="card" data-page="home schedule">
+      <div class="card" data-page="schedule">
         <div class="card-h"><h2>Расписание</h2>
           <div class="sch-tools" id="schTools"></div>
           <span class="eyebrow" id="dayLbl"></span></div>
@@ -457,7 +487,7 @@ tbody tr:hover{background:var(--surface-2)}
       </div>
     </section>
 
-    <section data-page="home tasks">
+    <section data-page="tasks">
       <div class="card" id="moodleWeek" hidden>
         <div class="card-h"><h2>В курсах Moodle на этой неделе</h2>
           <span class="eyebrow" id="moodleWeekLbl"></span></div>
@@ -465,7 +495,7 @@ tbody tr:hover{background:var(--surface-2)}
       </div>
     </section>
 
-    <section data-page="home tasks">
+    <section data-page="tasks">
       <div class="card" id="moodleTodo" hidden>
         <div class="card-h"><h2>Сделать в Moodle</h2><div class="tabs" id="todoTabs"></div></div>
         <div class="tw"><table>
@@ -475,7 +505,7 @@ tbody tr:hover{background:var(--surface-2)}
       </div>
     </section>
 
-    <section id="grades" data-page="home grades">
+    <section id="grades" data-page="grades">
       <div class="head" style="margin-bottom:10px">
         <div><h2 style="font-size:15px">Курсы</h2>
         <p style="margin:2px 0 0;color:var(--ink-2);font-size:12.5px">
@@ -533,7 +563,7 @@ function whenText(n) {
    кладёт их рядом. Разметка при этом одна на всех: секции помечены data-page,
    лишние прячутся. Так разделы не разъезжаются между собой при правках. */
 const PAGES = [
-  { id: "home", file: "dashboard.html", name: "Главная", sub: "всё важное на один экран",
+  { id: "home", file: "dashboard.html", name: "Главная", sub: "что сделать в ближайшие дни",
     icon: '<path d="M3 10.5 12 3l9 7.5V21H3z"/>' },
   { id: "tasks", file: "tasks.html", name: "Задания", sub: "сроки и статус по каждому",
     icon: '<path d="M9 5h11M9 12h11M9 19h11M4 5l1 1 2-2M4 12l1 1 2-2M4 19l1 1 2-2"/>' },
@@ -690,7 +720,7 @@ if (need.length) {
 /* Найденное в университетской почте. Разбирает локальная модель на этом же
    компьютере, письма никуда не уходят. Показываем только то, что требует
    действия — приветствия и рассылки сюда не попадают. */
-if ((DATA.mail || []).length) {
+if ((DATA.mail || []).length && PAGE !== "home") {
   const box = el("div", "card");
   box.style.cssText = "padding:11px 14px";
   const head = el("div", "eyebrow", "из почты");
@@ -1794,11 +1824,91 @@ if (FROM_DISK) {
   }).catch(() => {});
 }
 
+/* ── Главная: что сделать ─────────────────────────────────────────────────
+   Студенты просили «коротко: сделай это и это». Поэтому главная — только
+   список действий на ближайшие дни, по строке на дело, самое срочное сверху.
+   Таблицы, плитки и календарь остались в разделах, ссылка «ещё» ведёт туда.
+
+   Moodle не говорит, сдано ли задание, — только оценено ли. Поэтому
+   неоценённое после срока не «просрочено», а «проверь, сдано ли», и только
+   за последние три дня: старые хвосты живут в разделе «Задания». */
+if (PAGE === "home") {
+  const todo = [];
+  const wd = (today.getDay() + 6) % 7 + 1;
+  const courseName = c => (c || "").replace(/\s*\|.*$/, "");
+  const short = name => String(name || "").replace(/ is due$/i, "");
+  const add = (rank, verb, what, sub, pill, url) => todo.push({ rank, verb, what, sub, pill, url });
+
+  allItems.filter(i => i.score === null || i.score === undefined).forEach(i => {
+    const n = days(i.due, today);
+    if (n < -3 || n > 7) return;
+    if (n < 0) add(n / 10, "Проверь", "«" + short(i.name) + "» — сдано ли?",
+                   courseName(i.course) + " · срок был " + fmt(i.due), { t: "срок прошёл", k: "bad" }, i.url);
+    else add(1 + n, "Сдать", "«" + short(i.name) + "»",
+             courseName(i.course) + " · " + fmt(i.due) + (i.at && i.at !== "00:00" ? ", до " + i.at : ""),
+             whenText(n), i.url);
+  });
+  prepItems.forEach(i => {
+    const n = days(i.due, today);
+    if (n >= 0 && n <= 1) add(1.5 + n, "Подготовься", i.name, courseName(i.course) + " · " + i.sub, whenText(n), i.url);
+  });
+  atRisk.forEach(c => c.eval.risks.forEach(r =>
+    add(0.5, "Внимание", courseName(c.title), r, { t: "риск", k: "bad" }, "grades.html")));
+  (DATA.key_dates || []).forEach(d => {
+    const n = days(d.date, today);
+    if (n >= 0 && n <= 14 && (d.kind === "rk" || /сесси|экзамен/i.test(d.title)))
+      add(3 + n / 2, "Готовься", d.title, d.span, whenText(n), "dates.html");
+  });
+  (DATA.mail || []).forEach(m => add(2.5, "Из почты", m, "", null, null));
+
+  /* Пары сегодня — одной строкой: сколько и когда первая. Подробности — в «Расписании». */
+  const lessons = (DATA.schedule || []).filter(s => s.day === wd && /^\d\d:\d\d/.test(s.start || ""))
+    .sort((a, b) => a.start < b.start ? -1 : 1);
+  if (lessons.length) {
+    const f = lessons[0];
+    add(-1, "Сегодня", lessons.length + " " + plural(lessons.length, "пара", "пары", "пар") + ", первая в " + f.start,
+        f.title + (f.online ? " · онлайн" : f.room ? " · " + f.room : ""), null, "schedule.html");
+  }
+
+  todo.sort((a, b) => a.rank - b.rank);
+  const LIMIT = 7;
+  const box = document.getElementById("todoList");
+  const work = todo.filter(t => t.verb !== "Сегодня").length;
+  document.getElementById("todoLbl").textContent = work ? work + " " + plural(work, "дело", "дела", "дел") : "";
+  todo.slice(0, LIMIT).forEach(t => {
+    const row = el("div", "todo-row");
+    row.appendChild(el("span", "verb", t.verb));
+    const what = el("div", "what");
+    if (t.url) {
+      const a = el("a", null, t.what); a.href = t.url;
+      /* Moodle — в новой вкладке, разделы дашборда — в этой же. */
+      if (!t.url.endsWith(".html")) { a.target = "_blank"; a.rel = "noopener"; }
+      what.appendChild(a);
+    } else what.appendChild(document.createTextNode(t.what));
+    if (t.sub) what.appendChild(el("small", null, t.sub));
+    row.appendChild(what);
+    if (t.pill) row.appendChild(el("span", "pill " + t.pill.k, t.pill.t));
+    box.appendChild(row);
+  });
+  if (!work) {
+    const later = allItems.filter(i => i.score === null && days(i.due, today) > 7)
+      .sort((a, b) => a.due < b.due ? -1 : 1)[0];
+    box.appendChild(el("div", "todo-empty", "На ближайшую неделю ничего не горит."
+      + (later ? " Следующий срок — «" + short(later.name) + "», " + fmt(later.due) + "." : "")));
+  }
+  if (todo.length > LIMIT) {
+    const more = el("a", "todo-more", "Ещё " + (todo.length - LIMIT) + " — все задания →");
+    more.href = "tasks.html"; box.appendChild(more);
+  }
+}
+
 /* ── Тема ──────────────────────────────────────────────────────────────── */
 document.getElementById("themeBtn").onclick = () => {
   const cur = document.documentElement.getAttribute("data-theme");
   const dark = cur ? cur === "dark"
     : matchMedia("(prefers-color-scheme: dark)").matches;
-  document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
+  const next = dark ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("rubezh-theme", next); } catch (e) {}
 };
 </script>

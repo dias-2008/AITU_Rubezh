@@ -200,6 +200,67 @@ def _register_macos():
     return app
 
 
+# --- Окно входа поверх остальных ------------------------------------------
+
+def raise_window(exe_marker):
+    """Вытащить на передний план окно Chromium, запущенного нами.
+
+    Окно входа открывает процесс без фокуса — мастер в свёрнутой консоли или
+    обработчик rubezh:// под pythonw. Windows таким процессам не даёт забирать
+    передний план: новое окно не появляется, а только мигает на панели задач,
+    и человек ждёт перед пустым экраном. Особенно без своего Chrome: тогда
+    Chromium открывается впервые и его значок никто не узнаёт.
+
+    Окно ищем по пути exe: в нём есть `exe_marker` (папка браузеров Playwright).
+    Нажатие Alt перед SetForegroundWindow — известный способ снять запрет:
+    система считает, что пользователь только что работал с клавиатурой.
+    На macOS и Linux такого запрета нет — ничего не делаем.
+    """
+    if not paths.WINDOWS:
+        return False
+    import ctypes
+    from ctypes import wintypes
+    user32, kernel32 = ctypes.windll.user32, ctypes.windll.kernel32
+    marker = exe_marker.lower()
+    found = []
+
+    def exe_of(hwnd):
+        pid = wintypes.DWORD()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        handle = kernel32.OpenProcess(0x1000, False, pid.value)   # QUERY_LIMITED_INFORMATION
+        if not handle:
+            return ""
+        try:
+            size = wintypes.DWORD(1024)
+            buf = ctypes.create_unicode_buffer(size.value)
+            ok = kernel32.QueryFullProcessImageNameW(handle, 0, buf, ctypes.byref(size))
+            return buf.value if ok else ""
+        finally:
+            kernel32.CloseHandle(handle)
+
+    @ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+    def each(hwnd, _):
+        cls = ctypes.create_unicode_buffer(64)
+        user32.GetClassNameW(hwnd, cls, 64)
+        if (cls.value == "Chrome_WidgetWin_1" and user32.IsWindowVisible(hwnd)
+                and user32.GetWindowTextLengthW(hwnd) and marker in exe_of(hwnd).lower()):
+            found.append(hwnd)
+        return True
+
+    user32.EnumWindows(each, 0)
+    for hwnd in found:
+        if user32.IsIconic(hwnd):
+            user32.ShowWindow(hwnd, 9)                              # SW_RESTORE
+        user32.keybd_event(0x12, 0, 0, 0)                           # Alt вниз
+        user32.SetForegroundWindow(hwnd)
+        user32.keybd_event(0x12, 0, 2, 0)                           # Alt вверх
+        # Даже если фокус не дали — хотя бы поверх остальных окон.
+        flags = 0x0001 | 0x0002 | 0x0040                            # NOSIZE | NOMOVE | SHOWWINDOW
+        user32.SetWindowPos(hwnd, -1, 0, 0, 0, 0, flags)            # HWND_TOPMOST
+        user32.SetWindowPos(hwnd, -2, 0, 0, 0, 0, flags)            # HWND_NOTOPMOST
+    return bool(found)
+
+
 # --- Раз в час без человека -------------------------------------------------
 
 def schedule_on(name, args, label, tool="rubezh"):

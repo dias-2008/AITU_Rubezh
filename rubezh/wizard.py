@@ -92,7 +92,14 @@ def step_login(service, title, why):
 
 def step_outlook():
     print("Почту (Outlook) инструмент читает локальной моделью через Ollama:")
-    print("нужна установленная Ollama и модель gemma4:e4b (~10 ГБ). Без этого шаг не нужен.")
+    import machine
+    tip = machine.advice()
+    if tip["model"]:
+        print(f"нужна установленная Ollama и модель {tip['model']} (~{tip['size_gb']} ГБ) — "
+              f"она подходит этому компьютеру ({tip['ram_gb']} ГБ памяти). Без этого шаг не нужен.")
+    else:
+        print(f"нужна Ollama и модель, а этому компьютеру ({tip['ram_gb']} ГБ памяти) она будет"
+              " тяжела. Советуем шаг пропустить.")
     if not _ask("Настроить вход в Outlook?", default="n"):
         return False
     import session

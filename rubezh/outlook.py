@@ -39,8 +39,9 @@ ROWS = "div[role='option']"
 # Чьи письма вообще смотрим. Всё, что не отсюда, в модель не попадает.
 UNIVERSITY = ("astana it university", "astanait", "aitu")
 
-# Локальная модель, зашита намеренно: см. первое правило в докстринге модуля.
-LOCAL = {"backend": "ollama", "ollama_model": "gemma4:e4b"}
+# Только локальная модель — намеренно: см. первое правило в докстринге модуля.
+# Какая именно, решает machine.model(): уже скачанная или подходящая по железу.
+LOCAL = {"backend": "ollama"}
 
 PROMPT = (
     "Ниже письма из университета. Выпиши только то, что требует действия от студента "
@@ -107,7 +108,9 @@ def digest(messages):
     blob = "\n\n".join(
         f"[{m['title']}]" + (f"\n{m['body']}" if m["body"] else "") for m in messages
     )
-    answer = (llm.summarize(PROMPT, blob, LOCAL) or "").strip()
+    import machine
+    cfg = dict(LOCAL, ollama_model=machine.model())
+    answer = (llm.summarize(PROMPT, blob, cfg) or "").strip()
     if not answer or answer.lower().strip(" .") in ("нет", "no", "ничего"):
         return []
     lines = []

@@ -49,11 +49,17 @@ def act_browser(_body):
     return True, "Chromium скачан."
 
 
+# Кнопка «Отменить» у шага входа. Один на мастер: шаги и так идут по одному.
+CANCEL = threading.Event()
+
+
 def act_login(service):
     def act(_body):
         import session
-        if session.login(service):
+        if session.login(service, cancel=CANCEL):
             return True, "Вошёл, сессия сохранена."
+        if CANCEL.is_set():
+            return False, "Отменено. Вернуться к этому шагу можно в любой момент."
         return False, "Вход не подтвердился: окно закрыли или прошло 10 минут. Попробуй ещё раз."
     return act
 
@@ -90,8 +96,9 @@ def act_token(body):
     token = str(body.get("token") or "").strip()
     if ":" not in token or len(token) <= 30:
         return False, "Не похоже на токен. Он длинный, с двоеточием посередине."
+    name = notify.check_token(token)
     notify.save_token(token)
-    return True, "Токен сохранён."
+    return True, f"Токен подошёл — это бот @{name}." if name else "Токен сохранён."
 
 
 def act_telegram(body):
@@ -137,6 +144,8 @@ class Wizard:
         self.done = set()                     # то, что не проверить с диска: ярлык, схема, Outlook
         self.leave_at = time.time() + IDLE_SEC
         self.finished = threading.Event()
+        self.asked_bot = False
+        self.llm_advice = None
 
     def touch(self, seconds=IDLE_SEC):
         self.leave_at = time.time() + seconds
@@ -169,16 +178,39 @@ class Wizard:
             "group_have": have,
             "group_mine": fast.secrets().get("du_group") or "",
             "bot": bool(os.environ.get("BOT_TOKEN")),
+            "bot_name": self.bot_name(),
             "chat": bool(notify.chat_id()),
             "scheduled": scheduled,
             "done": sorted(self.done),
         }
+
+    def llm(self):
+        """Совет по модели для почты. Железо за время мастера не меняется —
+        считаем один раз; заново — после шага Outlook (вдруг скачали модель)."""
+        if self.llm_advice is None:
+            import machine
+            self.llm_advice = machine.advice()
+        return self.llm_advice
+
+    def bot_name(self):
+        """Имя бота для кнопки «Открыть». Токен сохранили до того, как мы стали
+        его запоминать, — спросим Telegram один раз."""
+        import notify
+        name = notify.bot_username()
+        if not name and os.environ.get("BOT_TOKEN") and not self.asked_bot:
+            self.asked_bot = True
+            try:
+                name = notify.check_token(os.environ["BOT_TOKEN"])
+            except SystemExit:
+                pass
+        return name
 
     def do(self, name, body):
         if name not in ACTIONS:
             return {"ok": False, "message": "Нет такого шага."}
         if not self.busy.acquire(blocking=False):
             return {"ok": False, "message": "Подожди — ещё идёт другой шаг."}
+        CANCEL.clear()
         try:
             try:
                 ok, message = ACTIONS[name](body)
@@ -188,6 +220,8 @@ class Wizard:
                 ok, message = False, str(error)[:300] or type(error).__name__
             if ok:
                 self.done.add(name)
+            if name == "outlook":
+                self.llm_advice = None
         finally:
             self.busy.release()
         if ok and name == "finish":
@@ -226,6 +260,11 @@ def handler(wiz):
                 self._send(200, PAGE.read_bytes(), "text/html; charset=utf-8")
             elif route == "api/state":
                 self._json(wiz.state())
+            elif route == "api/llm":
+                # Отдельно и только по раскрытию «Почты»: проверка железа зовёт
+                # `ollama list`, а тот будит сервер Ollama. Тем, кому почта не
+                # нужна, ни ждать этого, ни будить Ollama незачем.
+                self._json(wiz.llm())
             elif route is not None:
                 self._send(404, b"not found", "text/plain")
 
@@ -242,6 +281,9 @@ def handler(wiz):
             except ValueError:
                 body = {}
             if route == "api/ping":
+                self._json({})
+            elif route == "api/cancel":
+                CANCEL.set()
                 self._json({})
             elif route == "api/bye":
                 wiz.touch(BYE_SEC)

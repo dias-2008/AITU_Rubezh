@@ -173,10 +173,18 @@ def _du_part(snap):
 def _mail_part(snap, old):
     """Университетская почта.
 
-    Модель запускаем, ТОЛЬКО если появились новые письма: gemma4:e4b весит почти
-    десять гигабайт, и гонять её каждый час впустую — ровно та трата ресурсов,
+    Модель запускаем, ТОЛЬКО если появились новые письма: даже маленькая весит
+    несколько гигабайт, и гонять её каждый час впустую — ровно та трата ресурсов,
     которой мы избегали, уходя от запуска Chromium.
+
+    Почта — по желанию. Не входил в Outlook — не ходим туда вовсе: иначе каждый
+    час поднимался бы Chromium и минуту ждал страницу, которой не будет. Нет
+    подходящей скачанной модели — письма видим, но не разбираем.
     """
+    import machine
+    import session
+    if not session._state_file("outlook").exists():
+        return
     messages = outlook.fetch(limit=12, full=False)
     snap["mail"] = [m["title"] for m in messages]
     snap["collected"].append("mail")
@@ -186,7 +194,7 @@ def _mail_part(snap, old):
     # подряд либо, наоборот, ни одного.
     seen = set(known(old).get("mail") or (old or {}).get("mail") or [])
     fresh = [m for m in messages if m["title"] not in seen]
-    if fresh and seen:             # на первом запуске не разбираем всю историю
+    if fresh and seen and machine.ready():   # на первом запуске не разбираем всю историю
         snap["mail_findings"] = outlook.digest(fresh)
     else:
         snap["mail_findings"] = known(old).get("mail_findings") or (old or {}).get("mail_findings", [])
